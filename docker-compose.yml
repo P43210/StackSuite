@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stacksuite
+      POSTGRES_PASSWORD: stacksuite_dev
+      POSTGRES_DB: stacksuite
+    ports:
+      - "5432:5432"
+    volumes:
+      - stacksuite-postgres-data:/var/lib/postgresql/data
+      - ./backend/src/db/migrations:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  # Account/auth layer only (Google, email+password, linked wallet address).
+  # Escrow/yield/watchlist/alerts data stays in Postgres above.
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - stacksuite-mongo-data:/data/db
+
+volumes:
+  stacksuite-postgres-data:
+  stacksuite-mongo-data:

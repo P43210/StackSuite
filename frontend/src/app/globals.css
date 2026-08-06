@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+:root,
+:root[data-theme="dark"] {
+  --color-ink: #0f0d17;
+  --color-surface: #171426;
+  --color-surface-raised: #1e1a30;
+  --color-indigo-deep: #3a32a0;
+  --color-indigo: #5546e8;
+  --color-indigo-light: #7b70f5;
+  --color-ember: #f2994a;
+  --color-ember-dim: #7a5230;
+  --color-chalk: #f5f3ff;
+  --color-slate-mist: #8a86a8;
+  --color-slate-dim: #5f5c78;
+  --color-line: rgba(245, 243, 255, 0.08);
+  --color-line-strong: rgba(245, 243, 255, 0.14);
+  --color-positive: #7b70f5;
+  --color-negative: #f2994a;
+  color-scheme: dark;
+}
+
+/* Light theme: same brand hues, re-tuned for a bright surface instead of
+   just inverting - indigo/ember keep their identity, ink and chalk swap
+   roles, line contrast is rebalanced so borders stay visible on white. */
+:root[data-theme="light"] {
+  --color-ink: #f7f6fb;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-indigo-deep: #4a40c4;
+  --color-indigo: #5546e8;
+  --color-indigo-light: #4438c9;
+  --color-ember: #d97a2e;
+  --color-ember-dim: #f5dcc0;
+  --color-chalk: #17142a;
+  --color-slate-mist: #625f78;
+  --color-slate-dim: #8783a0;
+  --color-line: rgba(23, 20, 42, 0.1);
+  --color-line-strong: rgba(23, 20, 42, 0.16);
+  --color-positive: #4438c9;
+  --color-negative: #d97a2e;
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --color-surface-raised: var(--color-surface-raised);
+  --color-indigo-deep: var(--color-indigo-deep);
+  --color-indigo: var(--color-indigo);
+  --color-indigo-light: var(--color-indigo-light);
+  --color-ember: var(--color-ember);
+  --color-ember-dim: var(--color-ember-dim);
+  --color-chalk: var(--color-chalk);
+  --color-slate-mist: var(--color-slate-mist);
+  --color-slate-dim: var(--color-slate-dim);
+  --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
+  --color-positive: var(--color-positive);
+  --color-negative: var(--color-negative);
+}
+
+body {
+  background: var(--color-ink);
+  color: var(--color-chalk);
+  font-feature-settings: "cv11", "ss01";
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* Signature texture: a faint stacked-bar watermark, echoing the mark,
+   fixed to the viewport so it reads as ambient atmosphere rather than
+   decoration on any one screen. */
+.stack-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60% 50% at 85% 0%, rgba(85, 70, 232, 0.16), transparent 60%),
+    radial-gradient(40% 40% at 0% 100%, rgba(242, 153, 74, 0.08), transparent 60%);
+}
+
+:root[data-theme="light"] .stack-atmosphere {
+  background:
+    radial-gradient(60% 50% at 85% 0%, rgba(85, 70, 232, 0.08), transparent 60%),
+    radial-gradient(40% 40% at 0% 100%, rgba(242, 153, 74, 0.05), transparent 60%);
+}
+
+::selection {
+  background: var(--color-indigo);
+  color: var(--color-chalk);
+}
+
+/* Visible keyboard focus everywhere, never suppressed. */
+:focus-visible {
+  outline: 2px solid var(--color-indigo-light);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Applied only on the landing page, and only once JS has confirmed a
+   fine pointer + no motion-reduction preference - matches the same
+   check CustomCursor makes before rendering, so the system cursor is
+   never hidden without a replacement drawn for it. */
+@media (pointer: fine) {
+  .landing-no-cursor,
+  .landing-no-cursor * {
+    cursor: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

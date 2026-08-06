@@ -1,0 +1,53 @@
+# --- dependencies ---
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+
+# --- environment / secrets ---
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.pem
+
+# --- Next.js (frontend) ---
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/next-env.d.ts.bak
+.vercel
+
+# --- TypeScript build output (backend, telegram-bot) ---
+backend/dist/
+telegram-bot/dist/
+*.tsbuildinfo
+
+# --- Clarinet / contracts ---
+contracts/.cache/
+contracts/coverage/
+contracts/costs-reports.json
+
+# --- logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# --- test / coverage ---
+coverage/
+.nyc_output/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# --- misc ---
+*.tgz
+.turbo/

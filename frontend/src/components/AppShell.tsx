@@ -1,0 +1,201 @@
+"use client";
+
+import { useState } from "react";
+import {
+  IdCard,
+  Send,
+  Wallet as WalletIcon,
+  Sprout,
+  LineChart,
+  Calculator,
+  Star,
+  KeyRound,
+  Scale,
+  Sparkles,
+  Menu,
+  X,
+} from "lucide-react";
+import { WalletButton } from "./WalletButton";
+import { ThemeToggle } from "./ThemeToggle";
+import { BnsTab } from "./tabs/BnsTab";
+import { TelegramBotTab } from "./tabs/TelegramBotTab";
+import { PortfolioTab } from "./tabs/PortfolioTab";
+import { CompareWalletsTab } from "./tabs/CompareWalletsTab";
+import { StackingMonitorTab } from "./tabs/StackingMonitorTab";
+import { WrappedTab } from "./tabs/WrappedTab";
+import { MarketsTab } from "./tabs/MarketsTab";
+import { ToolsTab } from "./tabs/ToolsTab";
+import { TrackingTab } from "./tabs/TrackingTab";
+import { WalletTab } from "./tabs/WalletTab";
+
+const TABS = [
+  { id: "bns", label: "BNS Names", icon: IdCard },
+  { id: "bot", label: "Telegram Bot", icon: Send },
+  { id: "portfolio", label: "Portfolio", icon: WalletIcon },
+  { id: "compare", label: "Compare Wallets", icon: Scale },
+  { id: "stacking", label: "Stacking Monitor", icon: Sprout },
+  { id: "wrapped", label: "Wrapped", icon: Sparkles },
+  { id: "markets", label: "Markets", icon: LineChart },
+  { id: "tools", label: "Tools", icon: Calculator },
+  { id: "tracking", label: "Tracking", icon: Star },
+  { id: "wallet", label: "Wallet", icon: KeyRound },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+function Mark({ size = 22 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 200 200" width={size} height={size} className="shrink-0">
+      <rect x="26" y="146" width="100" height="28" rx="14" fill="#3A32A0" />
+      <rect x="42" y="106" width="100" height="28" rx="14" fill="#5546E8" />
+      <rect x="58" y="66" width="100" height="28" rx="14" fill="#7B70F5" />
+      <rect x="74" y="26" width="100" height="28" rx="14" fill="#F2994A" />
+    </svg>
+  );
+}
+
+function NavLink({
+  tab,
+  active,
+  onClick,
+}: {
+  tab: (typeof TABS)[number];
+  active: boolean;
+  onClick: () => void;
+}) {
+  const Icon = tab.icon;
+  return (
+    <button
+      onClick={onClick}
+      aria-current={active ? "page" : undefined}
+      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors w-full text-left ${
+        active
+          ? "bg-white/[0.06] text-chalk"
+          : "text-slate-mist hover:text-chalk hover:bg-white/[0.03]"
+      }`}
+    >
+      {active && (
+        <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-ember" />
+      )}
+      <Icon size={17} strokeWidth={2} className={active ? "text-indigo-light" : ""} />
+      <span className="font-medium">{tab.label}</span>
+    </button>
+  );
+}
+
+export function AppShell({ accountEmail }: { accountEmail: string | null }) {
+  const [active, setActive] = useState<TabId>("bns");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const select = (id: TabId) => {
+    setActive(id);
+    setMobileNavOpen(false);
+  };
+
+  return (
+    <div className="min-h-screen">
+      <div className="stack-atmosphere" />
+
+      {/* Mobile top bar */}
+      <header className="md:hidden relative z-10 flex items-center justify-between px-4 py-3 border-b border-line">
+        <button
+          onClick={() => setMobileNavOpen(true)}
+          aria-label="Open navigation"
+          className="p-2 -ml-2 text-slate-mist hover:text-chalk"
+        >
+          <Menu size={22} />
+        </button>
+        <div className="flex items-center gap-2">
+          <Mark size={20} />
+          <span className="font-display font-bold text-lg">
+            Stack<span className="font-medium text-slate-mist">Suite</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <ThemeToggle compact />
+          <WalletButton compact />
+        </div>
+      </header>
+
+      {/* Mobile nav drawer */}
+      {mobileNavOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <nav className="relative z-10 w-72 bg-surface border-r border-line p-4 flex flex-col gap-1">
+            <div className="flex items-center justify-between mb-4 px-1">
+              <div className="flex items-center gap-2">
+                <Mark size={20} />
+                <span className="font-display font-bold">
+                  Stack<span className="font-medium text-slate-mist">Suite</span>
+                </span>
+              </div>
+              <button
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close navigation"
+                className="p-1 text-slate-mist hover:text-chalk"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {TABS.map((tab) => (
+              <NavLink
+                key={tab.id}
+                tab={tab}
+                active={active === tab.id}
+                onClick={() => select(tab.id)}
+              />
+            ))}
+          </nav>
+        </div>
+      )}
+
+      <div className="relative z-10 flex">
+        {/* Desktop sidebar */}
+        <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-line px-4 py-6 h-screen sticky top-0">
+          <div className="flex items-center gap-2 px-2 mb-8">
+            <Mark size={24} />
+            <span className="font-display font-bold text-lg">
+              Stack<span className="font-medium text-slate-mist">Suite</span>
+            </span>
+          </div>
+
+          <nav className="flex flex-col gap-1 flex-1">
+            {TABS.map((tab) => (
+              <NavLink
+                key={tab.id}
+                tab={tab}
+                active={active === tab.id}
+                onClick={() => select(tab.id)}
+              />
+            ))}
+          </nav>
+
+          <div className="px-2 flex items-center gap-2">
+            <div className="flex-1">
+              <WalletButton />
+            </div>
+            <ThemeToggle />
+          </div>
+        </aside>
+
+        <main className="flex-1 min-w-0 px-5 py-8 md:px-10 md:py-10">
+          <div className="max-w-3xl">
+            {active === "bns" && <BnsTab />}
+            {active === "bot" && <TelegramBotTab />}
+            {active === "portfolio" && <PortfolioTab />}
+            {active === "compare" && <CompareWalletsTab />}
+            {active === "stacking" && <StackingMonitorTab />}
+            {active === "wrapped" && <WrappedTab />}
+            {active === "markets" && <MarketsTab />}
+            {active === "tools" && <ToolsTab />}
+            {active === "tracking" && <TrackingTab />}
+            {active === "wallet" && <WalletTab accountEmail={accountEmail} />}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
