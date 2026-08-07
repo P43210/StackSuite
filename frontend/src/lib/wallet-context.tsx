@@ -235,8 +235,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // from the connect simply not working.
       const message = err instanceof Error ? err.message : "";
       const cancelled = /reject|cancel|closed|denied/i.test(message);
+      // @stacks/connect throws a raw TypeError instead of a clean "not
+      // found" error when it probes a wallet provider method (e.g.
+      // bip122_getAccountAddresses) on a provider object that isn't
+      // actually injected. Treat that the same as "no wallet found"
+      // rather than surfacing the internal stack-trace-style message.
+      const noProvider = /cannot read propert(y|ies) of undefined/i.test(message);
       setConnectError(
-        cancelled ? null : message || "Couldn't connect to a wallet. Please try again."
+        cancelled
+          ? null
+          : noProvider
+          ? "No wallet extension was detected. Install or unlock Leather/Xverse, then try again."
+          : message || "Couldn't connect to a wallet. Please try again."
       );
     } finally {
       setConnecting(false);

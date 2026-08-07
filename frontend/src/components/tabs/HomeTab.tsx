@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Mark } from "@/components/ui/Mark";
 
 const VALUE_PROPS = [
   {
@@ -97,11 +98,8 @@ export function HomeTab({ onNavigate }: { onNavigate: (tabId: string) => void })
     <div>
       {/* Hero */}
       <section className="pt-2 pb-10 md:pb-14">
-        <div className="flex items-end gap-1.5 mb-6" aria-hidden="true">
-          <div className="w-2.5 rounded-full bg-[#3A32A0]" style={{ height: 14 }} />
-          <div className="w-2.5 rounded-full bg-[#5546E8]" style={{ height: 22 }} />
-          <div className="w-2.5 rounded-full bg-[#7B70F5]" style={{ height: 30 }} />
-          <div className="w-2.5 rounded-full bg-[#F2994A]" style={{ height: 38 }} />
+        <div className="mb-6" aria-hidden="true">
+          <Mark size={48} />
         </div>
         <h1 className="font-display font-bold text-3xl md:text-4xl leading-[1.1] text-chalk max-w-lg">
           Bitcoin-secured tools.

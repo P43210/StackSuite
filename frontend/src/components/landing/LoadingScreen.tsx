@@ -3,18 +3,19 @@
 import { useEffect, useState } from "react";
 
 const BARS = [
-  { delay: 0, fill: "#3A32A0" },
-  { delay: 90, fill: "#5546E8" },
-  { delay: 180, fill: "#7B70F5" },
-  { delay: 270, fill: "#F2994A" },
+  { delay: 0, fill: "#F2994A" },
+  { delay: 90, fill: "#7B70F5" },
+  { delay: 180, fill: "#5546E8" },
+  { delay: 270, fill: "#3A32A0" },
 ];
 
 /**
- * Full-screen splash that mirrors the wordmark's four ascending bars,
- * rising into place in sequence - the same "stacking" motif as the
- * logo, just given a moment to breathe before the page underneath it
- * is revealed. Shown once per mount; calls onDone when it's safe to
- * unmount (after the fade-out transition finishes).
+ * Full-screen splash that mirrors the wordmark's four diagonally
+ * staggered bars, scaling into place in sequence top to bottom - the
+ * same "stacking" motif as the logo, just given a moment to breathe
+ * before the page underneath it is revealed. Shown once per mount;
+ * calls onDone when it's safe to unmount (after the fade-out
+ * transition finishes).
  */
 export function LoadingScreen({ onDone }: { onDone: () => void }) {
   const [risen, setRisen] = useState(false);
@@ -52,17 +53,17 @@ export function LoadingScreen({ onDone }: { onDone: () => void }) {
       }`}
       aria-hidden="true"
     >
-      <div className="flex items-end gap-2.5" style={{ height: 72 }}>
+      <div className="flex flex-col gap-2">
         {BARS.map((bar, i) => (
           <div
             key={i}
-            className="w-3.5 rounded-full origin-bottom transition-transform ease-out"
+            className="h-4 w-24 rounded-full origin-left transition-transform ease-out"
             style={{
-              height: 18 + i * 18,
+              marginLeft: i * 9,
               backgroundColor: bar.fill,
               transitionDuration: "520ms",
               transitionDelay: `${bar.delay}ms`,
-              transform: risen ? "scaleY(1)" : "scaleY(0)",
+              transform: risen ? "scaleX(1)" : "scaleX(0)",
             }}
           />
         ))}

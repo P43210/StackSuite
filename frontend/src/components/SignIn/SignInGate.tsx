@@ -17,21 +17,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { signInWithGoogle } from "@/lib/auth-actions";
+import { Mark } from "@/components/ui/Mark";
 import { EmailSignInField } from "./EmailSignInField";
 import { CustomCursor } from "../landing/CustomCursor";
 import { LoadingScreen } from "../landing/LoadingScreen";
 import { FadeIn } from "../landing/FadeIn";
-
-function Mark({ size = 22 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 200 200" width={size} height={size} className="shrink-0">
-      <rect x="26" y="146" width="100" height="28" rx="14" fill="#3A32A0" />
-      <rect x="42" y="106" width="100" height="28" rx="14" fill="#5546E8" />
-      <rect x="58" y="66" width="100" height="28" rx="14" fill="#7B70F5" />
-      <rect x="74" y="26" width="100" height="28" rx="14" fill="#F2994A" />
-    </svg>
-  );
-}
 
 const VALUE_PROPS = [
   {
@@ -128,11 +118,8 @@ export function SignInGate() {
           {/* Hero */}
           <section className="pt-20 pb-16 md:pt-28 md:pb-24 flex flex-col items-center text-center">
             <FadeIn>
-              <div className="flex items-end gap-1.5 justify-center mb-7" aria-hidden="true">
-                <div className="w-2.5 rounded-full bg-[#3A32A0]" style={{ height: 16 }} />
-                <div className="w-2.5 rounded-full bg-[#5546E8]" style={{ height: 26 }} />
-                <div className="w-2.5 rounded-full bg-[#7B70F5]" style={{ height: 36 }} />
-                <div className="w-2.5 rounded-full bg-[#F2994A]" style={{ height: 46 }} />
+              <div className="flex justify-center mb-7" aria-hidden="true">
+                <Mark size={64} />
               </div>
             </FadeIn>
             <FadeIn delay={80}>
