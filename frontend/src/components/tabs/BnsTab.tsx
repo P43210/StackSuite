@@ -176,9 +176,12 @@ function MyNamesPanel() {
       {namesQuery.data && namesQuery.data.names.length > 0 && (
         <Card className="divide-y divide-line overflow-hidden">
           {namesQuery.data.names.map((name) => (
-            <div key={name} className="flex items-center gap-2 px-4 py-3.5">
-              <IdCard size={15} className="text-indigo-light" />
-              <span className="text-sm text-chalk font-mono">{name}</span>
+            <div key={name} className="flex items-center justify-between gap-3 px-4 py-3.5">
+              <div className="flex items-center gap-2 min-w-0">
+                <IdCard size={15} className="text-indigo-light shrink-0" />
+                <span className="text-sm text-chalk font-mono truncate">{name}</span>
+              </div>
+              <Badge tone="positive">active</Badge>
             </div>
           ))}
         </Card>

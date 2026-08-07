@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   KeyRound,
@@ -14,7 +14,6 @@ import {
   Copy,
   Check,
   Trash2,
-  UserX,
 } from "lucide-react";
 import { walletManager, MultiChainAccounts } from "@/lib/wallet/wallet-instance";
 import {
@@ -23,9 +22,9 @@ import {
   NoWalletFoundError,
 } from "@/lib/wallet/wallet-manager";
 import { fetchPortfolio, fetchCoinPrices, microStxToStx } from "@/lib/api";
-import { deleteAccount } from "@/lib/auth-actions";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { DangerAction } from "@/components/ui/DangerAction";
 import { Field, TextAreaField } from "@/components/ui/Field";
 import { PageHeading } from "@/components/ui/PageHeading";
 import { Spinner } from "@/components/ui/Spinner";
@@ -113,76 +112,15 @@ function AddressRow({ chain, address }: { chain: keyof typeof CHAIN_META; addres
   );
 }
 
-/** Two-step "click to arm, click again to confirm" destructive action -
-    no separate modal needed for the lower-stakes wallet removal. */
-function DangerAction({
-  label,
-  confirmLabel,
-  description,
-  onConfirm,
-  busy,
-}: {
-  label: ReactNode;
-  confirmLabel: string;
-  description: string;
-  onConfirm: () => void;
-  busy?: boolean;
-}) {
-  const [armed, setArmed] = useState(false);
-
-  if (armed) {
-    return (
-      <div className="rounded-lg border border-ember/30 bg-ember/[0.04] p-3">
-        <p className="text-xs text-chalk leading-relaxed">{description}</p>
-        <div className="flex gap-2 mt-3">
-          <Button variant="danger" onClick={onConfirm} disabled={busy} className="flex-1">
-            {busy ? "Working..." : confirmLabel}
-          </Button>
-          <Button variant="secondary" onClick={() => setArmed(false)} disabled={busy}>
-            Cancel
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setArmed(true)}
-      className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm text-slate-mist hover:text-ember hover:bg-ember/[0.06] transition-colors text-left"
-    >
-      {label}
-    </button>
-  );
-}
-
 function SettingsPanel({
-  accountEmail,
   onClose,
   onRemoveWallet,
   removing,
 }: {
-  accountEmail: string | null;
   onClose: () => void;
   onRemoveWallet: () => void;
   removing: boolean;
 }) {
-  const [deletingAccount, setDeletingAccount] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const handleDeleteAccount = async () => {
-    setDeletingAccount(true);
-    setDeleteError(null);
-    // Not wrapped in try/catch: a successful deletion ends in
-    // signOut()'s internal redirect throw, which must reach Next.js's
-    // own handling instead of being caught here - the same pattern
-    // EmailSignInField uses for sign-in. A genuine failure returns
-    // { error } instead of throwing, so that path is handled below.
-    const result = await deleteAccount();
-    setDeletingAccount(false);
-    if (result?.error) setDeleteError(result.error);
-  };
-
   return (
     <Modal title="Wallet settings" onClose={onClose}>
       <div className="space-y-5">
@@ -206,38 +144,10 @@ function SettingsPanel({
           </Card>
         </div>
 
-        <div>
-          <h3 className="text-xs font-mono uppercase tracking-wide text-slate-mist mb-2">
-            StackSuite account
-          </h3>
-          {accountEmail ? (
-            <Card className="p-1">
-              <div className="px-3 py-2.5 text-sm text-slate-mist border-b border-line">
-                Signed in as <span className="text-chalk">{accountEmail}</span>
-              </div>
-              <DangerAction
-                label={
-                  <span className="flex items-center gap-2">
-                    <UserX size={15} />
-                    Delete StackSuite account
-                  </span>
-                }
-                confirmLabel="Delete account"
-                description="This permanently deletes your StackSuite login and its linked wallet address. It does not touch this device's StackSuite Wallet or anything on-chain - only the account you sign in with. You'll be signed out immediately."
-                onConfirm={handleDeleteAccount}
-                busy={deletingAccount}
-              />
-              {deleteError && (
-                <p className="px-3 pb-2.5 text-xs text-ember font-mono">{deleteError}</p>
-              )}
-            </Card>
-          ) : (
-            <p className="text-xs text-slate-mist px-1">
-              You&apos;re not signed into a StackSuite account in this session (using a wallet
-              or Telegram identity instead), so there&apos;s no account to delete.
-            </p>
-          )}
-        </div>
+        <p className="text-xs text-slate-mist px-1">
+          Looking for logout or account deletion? Those moved to{" "}
+          <span className="text-chalk">Settings</span> in the main sidebar.
+        </p>
       </div>
     </Modal>
   );
@@ -286,12 +196,10 @@ function TokenRow({
 
 function UnlockedWallet({
   accounts,
-  accountEmail,
   onRemoveWallet,
   removingWallet,
 }: {
   accounts: MultiChainAccounts;
-  accountEmail: string | null;
   onRemoveWallet: () => void;
   removingWallet: boolean;
 }) {
@@ -423,7 +331,6 @@ function UnlockedWallet({
 
       {settingsOpen && (
         <SettingsPanel
-          accountEmail={accountEmail}
           onClose={() => setSettingsOpen(false)}
           onRemoveWallet={onRemoveWallet}
           removing={removingWallet}
@@ -450,7 +357,7 @@ function UnlockedWallet({
   );
 }
 
-export function WalletTab({ accountEmail }: { accountEmail: string | null }) {
+export function WalletTab() {
   const [screen, setScreen] = useState<Screen>("loading");
   const [pendingMnemonic, setPendingMnemonic] = useState<string | null>(null);
   const [confirmWord, setConfirmWord] = useState("");
@@ -694,12 +601,7 @@ export function WalletTab({ accountEmail }: { accountEmail: string | null }) {
       )}
 
       {screen === "unlocked" && accounts && (
-        <UnlockedWallet
-          accounts={accounts}
-          accountEmail={accountEmail}
-          onRemoveWallet={removeWallet}
-          removingWallet={busy}
-        />
+        <UnlockedWallet accounts={accounts} onRemoveWallet={removeWallet} removingWallet={busy} />
       )}
     </div>
   );

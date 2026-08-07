@@ -10,6 +10,10 @@ export async function signInWithGoogle() {
   await signIn("google", { redirectTo: "/" });
 }
 
+export async function signOutAction() {
+  await signOut({ redirectTo: "/" });
+}
+
 type ActionResult = { error: string } | undefined;
 
 export async function signInWithCredentials(

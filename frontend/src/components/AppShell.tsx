@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Home,
   IdCard,
   Send,
   Wallet as WalletIcon,
@@ -12,11 +13,15 @@ import {
   KeyRound,
   Scale,
   Sparkles,
+  User,
+  Settings as SettingsIcon,
   Menu,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { WalletButton } from "./WalletButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { HomeTab } from "./tabs/HomeTab";
 import { BnsTab } from "./tabs/BnsTab";
 import { TelegramBotTab } from "./tabs/TelegramBotTab";
 import { PortfolioTab } from "./tabs/PortfolioTab";
@@ -27,8 +32,11 @@ import { MarketsTab } from "./tabs/MarketsTab";
 import { ToolsTab } from "./tabs/ToolsTab";
 import { TrackingTab } from "./tabs/TrackingTab";
 import { WalletTab } from "./tabs/WalletTab";
+import { ProfileTab } from "./tabs/ProfileTab";
+import { SettingsTab } from "./tabs/SettingsTab";
 
 const TABS = [
+  { id: "home", label: "Home", icon: Home },
   { id: "bns", label: "BNS Names", icon: IdCard },
   { id: "bot", label: "Telegram Bot", icon: Send },
   { id: "portfolio", label: "Portfolio", icon: WalletIcon },
@@ -41,7 +49,12 @@ const TABS = [
   { id: "wallet", label: "Wallet", icon: KeyRound },
 ] as const;
 
-type TabId = (typeof TABS)[number]["id"];
+const ACCOUNT_TABS = [
+  { id: "profile", label: "Profile", icon: User },
+  { id: "settings", label: "Settings", icon: SettingsIcon },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"] | (typeof ACCOUNT_TABS)[number]["id"];
 
 function Mark({ size = 22 }: { size?: number }) {
   return (
@@ -54,12 +67,14 @@ function Mark({ size = 22 }: { size?: number }) {
   );
 }
 
+type NavItem = { id: TabId; label: string; icon: LucideIcon };
+
 function NavLink({
   tab,
   active,
   onClick,
 }: {
-  tab: (typeof TABS)[number];
+  tab: NavItem;
   active: boolean;
   onClick: () => void;
 }) {
@@ -84,7 +99,7 @@ function NavLink({
 }
 
 export function AppShell({ accountEmail }: { accountEmail: string | null }) {
-  const [active, setActive] = useState<TabId>("bns");
+  const [active, setActive] = useState<TabId>("home");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const select = (id: TabId) => {
@@ -148,6 +163,15 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
                 onClick={() => select(tab.id)}
               />
             ))}
+            <div className="h-px bg-line my-2" />
+            {ACCOUNT_TABS.map((tab) => (
+              <NavLink
+                key={tab.id}
+                tab={tab}
+                active={active === tab.id}
+                onClick={() => select(tab.id)}
+              />
+            ))}
           </nav>
         </div>
       )}
@@ -173,7 +197,18 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
             ))}
           </nav>
 
-          <div className="px-2 flex items-center gap-2">
+          <nav className="flex flex-col gap-1 pt-2 mt-2 border-t border-line">
+            {ACCOUNT_TABS.map((tab) => (
+              <NavLink
+                key={tab.id}
+                tab={tab}
+                active={active === tab.id}
+                onClick={() => select(tab.id)}
+              />
+            ))}
+          </nav>
+
+          <div className="px-2 mt-4 flex items-center gap-2">
             <div className="flex-1">
               <WalletButton />
             </div>
@@ -183,6 +218,7 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
 
         <main className="flex-1 min-w-0 px-5 py-8 md:px-10 md:py-10">
           <div className="max-w-3xl">
+            {active === "home" && <HomeTab onNavigate={(id) => select(id as TabId)} />}
             {active === "bns" && <BnsTab />}
             {active === "bot" && <TelegramBotTab />}
             {active === "portfolio" && <PortfolioTab />}
@@ -192,7 +228,9 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
             {active === "markets" && <MarketsTab />}
             {active === "tools" && <ToolsTab />}
             {active === "tracking" && <TrackingTab />}
-            {active === "wallet" && <WalletTab accountEmail={accountEmail} />}
+            {active === "wallet" && <WalletTab />}
+            {active === "profile" && <ProfileTab accountEmail={accountEmail} />}
+            {active === "settings" && <SettingsTab accountEmail={accountEmail} />}
           </div>
         </main>
       </div>
