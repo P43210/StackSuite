@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -33,6 +33,15 @@ export const metadata: Metadata = {
     apple: "/apple-icon.png",
   },
   manifest: "/manifest.webmanifest",
+};
+
+// Without this, mobile browsers fall back to a virtual desktop-width
+// viewport (~980px) and scale the whole page down to fit - so every
+// md:/sm: breakpoint in the app is effectively ignored on phones.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f0d17",
 };
 
 // Runs before paint, before React hydrates, so the correct theme is set

@@ -119,8 +119,15 @@ function ConnectedWalletMenu({
 }
 
 export function WalletButton({ compact = false }: { compact?: boolean }) {
-  const { connected, address, connecting, identitySource, connectWallet, disconnectWallet } =
-    useWallet();
+  const {
+    connected,
+    address,
+    connecting,
+    connectError,
+    identitySource,
+    connectWallet,
+    disconnectWallet,
+  } = useWallet();
 
   if (connected && address) {
     const sourceNote = identitySource ? SOURCE_LABEL[identitySource] : "Connected";
@@ -152,7 +159,10 @@ export function WalletButton({ compact = false }: { compact?: boolean }) {
         <Wallet2 size={15} />
         {connecting ? "Connecting..." : "Connect wallet"}
       </button>
-      {!compact && !walletConnectConfigured && (
+      {connectError && (
+        <p className="mt-1.5 text-[11px] leading-snug text-ember">{connectError}</p>
+      )}
+      {!compact && !connectError && !walletConnectConfigured && (
         <p className="mt-1.5 text-[11px] leading-snug text-slate-dim">
           On mobile, this only detects a wallet&apos;s own in-app browser.
           To connect an installed wallet app from any browser, set{" "}

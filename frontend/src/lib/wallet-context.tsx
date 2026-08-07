@@ -28,6 +28,7 @@ type WalletState = {
   connected: boolean;
   address: string | null;
   connecting: boolean;
+  connectError: string | null;
   identitySource: IdentitySource;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
@@ -49,6 +50,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
   const [identitySource, setIdentitySource] = useState<IdentitySource>(null);
 
   // Mirrors the latest identitySource into a ref so the storage/focus
@@ -187,6 +189,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (connecting || walletSessionActive.current) return;
 
     setConnecting(true);
+    setConnectError(null);
     try {
       // Without a WalletConnect project ID, @stacks/connect can only see
       // wallets injected as a browser extension (window.LeatherProvider,
@@ -197,20 +200,44 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // supports this on iOS and Android) can connect from any browser.
       const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID;
       await connect(projectId ? { walletConnectProjectId: projectId } : undefined);
+
       const newAddress = readAddress();
+      if (!newAddress) {
+        // connect() resolved but left nothing in local storage - the
+        // picker was shown and dismissed without a real session ever
+        // being established (e.g. the user hit "Install" on a wallet
+        // that isn't actually injected, which opens the extension's
+        // store page in a new tab but never completes a connection in
+        // this one). Surface that instead of quietly pretending we
+        // connected to a null address.
+        setConnectError(
+          "No wallet extension was detected. Install or unlock Leather/Xverse, then try again."
+        );
+        return;
+      }
+
       walletSessionActive.current = true;
       setConnected(true);
       setAddress(newAddress);
       setIdentitySource("wallet");
-      if (newAddress) trackWallet(newAddress, "Connected wallet", "connected");
+      trackWallet(newAddress, "Connected wallet", "connected");
 
       // Remember this address on the signed-in account for next time,
       // if there is one. A failure here (not signed in, DB unavailable)
       // is silent and non-fatal - the wallet is still connected for
       // this session either way.
-      if (newAddress) {
-        linkWalletToAccount(newAddress).catch(() => {});
-      }
+      linkWalletToAccount(newAddress).catch(() => {});
+    } catch (err) {
+      // connect() throws when the user closes the picker, rejects the
+      // request, or the extension errors out mid-handshake. This used
+      // to be uncaught: the button would just silently reset to
+      // "Connect wallet" with no explanation, which is indistinguishable
+      // from the connect simply not working.
+      const message = err instanceof Error ? err.message : "";
+      const cancelled = /reject|cancel|closed|denied/i.test(message);
+      setConnectError(
+        cancelled ? null : message || "Couldn't connect to a wallet. Please try again."
+      );
     } finally {
       setConnecting(false);
     }
@@ -230,11 +257,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setConnected(false);
     setAddress(null);
     setIdentitySource(null);
+    setConnectError(null);
   }, [identitySource]);
 
   return (
     <WalletContext.Provider
-      value={{ connected, address, connecting, identitySource, connectWallet, disconnectWallet }}
+      value={{
+        connected,
+        address,
+        connecting,
+        connectError,
+        identitySource,
+        connectWallet,
+        disconnectWallet,
+      }}
     >
       {children}
     </WalletContext.Provider>
