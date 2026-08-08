@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { Copy, Check, Send, ExternalLink } from "lucide-react";
 import { sendTip, TipTransferError } from "@/lib/tip-transfer";
 import { stxToMicroStx } from "@/lib/api";
@@ -23,19 +24,6 @@ function useCopied() {
   return { copied, copy };
 }
 
-/**
- * QR code is rendered via a public, keyless image endpoint (qrserver.com)
- * rather than a bundled QR library, to avoid adding a new dependency.
- * The only data encoded is a public Stacks address - the same thing
- * that's already visible on-chain to anyone, so there's no privacy loss
- * in it passing through a third-party image request.
- */
-function qrCodeUrl(data: string, size = 240) {
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=8&data=${encodeURIComponent(
-    data,
-  )}`;
-}
-
 export function TipJar({
   address,
   name,
@@ -53,8 +41,16 @@ export function TipJar({
   const addressCopy = useCopied();
   const linkCopy = useCopied();
 
-  const shareLink =
-    typeof window !== "undefined" ? `${window.location.origin}/tip/${address}` : `/tip/${address}`;
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    // Read the real origin only after mount, so the server-rendered
+    // markup and the first client render agree (avoiding a hydration
+    // mismatch) and the QR always ends up encoding a full, scannable
+    // URL rather than a bare path that briefly flashed before this
+    // ran.
+    setOrigin(window.location.origin);
+  }, []);
+  const shareLink = origin ? `${origin}/tip/${address}` : `/tip/${address}`;
 
   const pay = async () => {
     setError(null);
@@ -78,13 +74,25 @@ export function TipJar({
   return (
     <Card className={compact ? "p-4" : "p-6"}>
       <div className="flex flex-col sm:flex-row gap-5">
-        <img
-          src={qrCodeUrl(address, compact ? 160 : 220)}
-          alt={`QR code for ${name ?? address}`}
-          width={compact ? 160 : 220}
-          height={compact ? 160 : 220}
-          className="rounded-xl border border-line-strong shrink-0 self-center sm:self-start"
-        />
+        <div
+          className="rounded-xl border border-line-strong bg-white p-3 shrink-0 self-center sm:self-start"
+          style={{ width: compact ? 160 : 220, height: compact ? 160 : 220 }}
+        >
+          {origin ? (
+            <QRCodeSVG
+              value={shareLink}
+              size={compact ? 136 : 196}
+              level="M"
+              marginSize={0}
+              aria-label={`QR code to send a tip to ${name ?? address}`}
+            />
+          ) : (
+            // Origin isn't known until after mount (see effect above) -
+            // a blank placeholder for one frame beats briefly encoding
+            // a relative, unscannable path into a real-looking code.
+            <div className="w-full h-full" aria-hidden="true" />
+          )}
+        </div>
         <div className="flex-1 min-w-0 space-y-3">
           {name && <div className="font-display text-lg font-bold text-chalk">{name}</div>}
           <div className="flex items-center gap-2">

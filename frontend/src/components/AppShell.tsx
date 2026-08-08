@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Home,
   IdCard,
@@ -35,6 +35,8 @@ import { TrackingTab } from "./tabs/TrackingTab";
 import { WalletTab } from "./tabs/WalletTab";
 import { ProfileTab } from "./tabs/ProfileTab";
 import { SettingsTab } from "./tabs/SettingsTab";
+import { initTrackedWalletsSync } from "@/lib/tracked-wallets";
+import { initBnsWatchlistSync } from "@/lib/bns-watchlist";
 
 const TABS = [
   { id: "home", label: "Home", icon: Home },
@@ -91,6 +93,16 @@ function NavLink({
 export function AppShell({ accountEmail }: { accountEmail: string | null }) {
   const [active, setActive] = useState<TabId>("home");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Keeps the tracked-wallets and BNS watchlists in sync with the
+  // signed-in account (see initTrackedWalletsSync/initBnsWatchlistSync)
+  // so the same account sees the same lists on every device. Re-runs
+  // whenever the signed-in account changes (including signing out).
+  useEffect(() => {
+    const signedIn = Boolean(accountEmail);
+    initTrackedWalletsSync(signedIn);
+    initBnsWatchlistSync(signedIn);
+  }, [accountEmail]);
 
   const select = (id: TabId) => {
     setActive(id);

@@ -234,18 +234,31 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       // "Connect wallet" with no explanation, which is indistinguishable
       // from the connect simply not working.
       const message = err instanceof Error ? err.message : "";
+      // Logged raw (not shown to the user) so the real cause is visible
+      // in a remote-debugged mobile console instead of only the
+      // generic message below.
+      console.error("[wallet] connect() failed:", err);
       const cancelled = /reject|cancel|closed|denied/i.test(message);
       // @stacks/connect throws a raw TypeError instead of a clean "not
       // found" error when it probes a wallet provider method (e.g.
       // bip122_getAccountAddresses) on a provider object that isn't
-      // actually injected. Treat that the same as "no wallet found"
-      // rather than surfacing the internal stack-trace-style message.
+      // actually injected. Treat that the same as "no wallet found" -
+      // but if a WalletConnect project ID *was* supplied, this same
+      // crash means the QR/deep-link path itself failed to initialize,
+      // not that no provider exists, so say that instead: telling a
+      // mobile user to "install a browser extension" when they already
+      // configured WalletConnect is actively misleading.
       const noProvider = /cannot read propert(y|ies) of undefined/i.test(message);
+      const walletConnectConfigured = Boolean(
+        process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+      );
       setConnectError(
         cancelled
           ? null
           : noProvider
-          ? "No wallet extension was detected. Install or unlock Leather/Xverse, then try again."
+          ? walletConnectConfigured
+            ? "Couldn't open the wallet connection request. This can happen if NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID wasn't included in the build that's currently running (Next.js only inlines it at build time) - rebuild and redeploy after setting it, then try again."
+            : "No wallet extension was detected. Install or unlock Leather/Xverse, then try again."
           : message || "Couldn't connect to a wallet. Please try again."
       );
     } finally {

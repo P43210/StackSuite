@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
 import {
   KeyRound,
   ShieldAlert,
@@ -73,10 +74,20 @@ function ActionButton({
   );
 }
 
-/** Copy-to-clipboard address row, used in the Receive panel. */
-function AddressRow({ chain, address }: { chain: keyof typeof CHAIN_META; address: string }) {
-  const { label, icon: Icon, bg } = CHAIN_META[chain];
+/**
+ * Receive panel: a chain switcher above a scannable QR code for
+ * whichever chain is selected, with the raw address underneath as a
+ * fallback for copy/paste. Encodes the bare address (no URI scheme
+ * prefix like "bitcoin:") since the app only supports plain transfers
+ * to a chain's default address today, not payment-request params -
+ * every wallet scanner handles a bare address fine, but a prefixed
+ * URI would be misleading if we're not also encoding amount/label.
+ */
+function ReceivePanel({ accounts }: { accounts: MultiChainAccounts }) {
+  const [chain, setChain] = useState<keyof typeof CHAIN_META>("stacks");
   const [copied, setCopied] = useState(false);
+  const address = accounts[chain].address;
+  const { label, icon: Icon, bg } = CHAIN_META[chain];
 
   const handleCopy = async () => {
     try {
@@ -89,26 +100,50 @@ function AddressRow({ chain, address }: { chain: keyof typeof CHAIN_META; addres
   };
 
   return (
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-3 w-full px-3 py-3 rounded-lg hover:bg-white/[0.03] transition-colors text-left"
-    >
-      <span
-        className="flex items-center justify-center w-9 h-9 rounded-full shrink-0"
-        style={{ backgroundColor: `${bg}22` }}
-      >
-        <Icon size={16} style={{ color: bg }} />
-      </span>
-      <span className="flex-1 min-w-0">
-        <span className="block text-sm text-chalk">{label}</span>
-        <span className="block font-mono text-xs text-slate-mist truncate">{address}</span>
-      </span>
-      {copied ? (
-        <Check size={15} className="text-indigo-light shrink-0" />
-      ) : (
-        <Copy size={15} className="text-slate-dim shrink-0" />
-      )}
-    </button>
+    <div>
+      <div className="flex gap-1.5 mb-5 p-1 rounded-lg bg-white/[0.03]">
+        {(Object.keys(CHAIN_META) as Array<keyof typeof CHAIN_META>).map((c) => {
+          const meta = CHAIN_META[c];
+          const active = c === chain;
+          return (
+            <button
+              key={c}
+              onClick={() => {
+                setChain(c);
+                setCopied(false);
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                active ? "bg-white/[0.08] text-chalk" : "text-slate-mist hover:text-chalk"
+              }`}
+            >
+              <meta.icon size={13} style={{ color: active ? meta.bg : undefined }} />
+              {meta.symbol}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col items-center">
+        <div className="p-4 rounded-xl bg-white">
+          <QRCodeSVG value={address} size={192} level="M" marginSize={0} />
+        </div>
+        <p className="mt-4 text-xs text-slate-mist flex items-center gap-1.5">
+          <Icon size={13} style={{ color: bg }} />
+          Your {label} address
+        </p>
+        <button
+          onClick={handleCopy}
+          className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/[0.03] transition-colors max-w-full"
+        >
+          <span className="font-mono text-xs text-chalk truncate">{address}</span>
+          {copied ? (
+            <Check size={14} className="text-indigo-light shrink-0" />
+          ) : (
+            <Copy size={14} className="text-slate-dim shrink-0" />
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -339,14 +374,7 @@ function UnlockedWallet({
 
       {receiveOpen && (
         <Modal title="Receive" onClose={() => setReceiveOpen(false)}>
-          <p className="text-xs text-slate-mist mb-2">
-            Send funds to the matching chain&apos;s address. Tap to copy.
-          </p>
-          <div className="space-y-1">
-            <AddressRow chain="stacks" address={accounts.stacks.address} />
-            <AddressRow chain="bitcoin" address={accounts.bitcoin.address} />
-            <AddressRow chain="ethereum" address={accounts.ethereum.address} />
-          </div>
+          <ReceivePanel accounts={accounts} />
         </Modal>
       )}
 
