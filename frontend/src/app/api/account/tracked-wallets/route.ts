@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Document } from "mongodb";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
@@ -12,12 +13,22 @@ type TrackedWallet = {
   addedAt: string;
 };
 
+// Gives the driver enough shape info to type $push/$pull against
+// trackedWallets as an array of TrackedWallet - without this, an
+// untyped Collection<Document> fails type-checking on these update
+// operators at build time (see the matching note in the
+// bns-watchlist route for the same issue with a plain string array).
+interface UserDoc extends Document {
+  email: string;
+  trackedWallets?: TrackedWallet[];
+}
+
 async function requireDb() {
   const session = await auth();
   if (!session?.user?.email) return { error: "not signed in" as const, status: 401 as const };
   try {
     const db = await getDb();
-    return { db, email: session.user.email.toLowerCase() };
+    return { collection: db.collection<UserDoc>("users"), email: session.user.email.toLowerCase() };
   } catch {
     return { error: "database unavailable" as const, status: 503 as const };
   }
@@ -27,8 +38,8 @@ export async function GET() {
   const ctx = await requireDb();
   if ("error" in ctx) return NextResponse.json({ error: ctx.error }, { status: ctx.status });
 
-  const user = await ctx.db.collection("users").findOne({ email: ctx.email });
-  const wallets = (user?.trackedWallets as TrackedWallet[] | undefined) ?? [];
+  const user = await ctx.collection.findOne({ email: ctx.email });
+  const wallets = user?.trackedWallets ?? [];
   return NextResponse.json({ wallets });
 }
 
@@ -53,16 +64,16 @@ export async function POST(req: NextRequest) {
   }
 
   const entry: TrackedWallet = { address, label, source, addedAt: new Date().toISOString() };
-  await ctx.db.collection("users").updateOne(
+
+  // Remove any existing entry for this address, then push the fresh
+  // one - the Mongo equivalent of the local dedupe-and-replace
+  // behavior. Two round trips (not one atomic op) because $pull and
+  // $push can't target the same array field in a single update.
+  await ctx.collection.updateOne(
     { email: ctx.email },
-    {
-      // Remove any existing entry for this address, then push the
-      // fresh one - the Mongo equivalent of the local dedupe-and-
-      // replace behavior, done atomically in one round trip.
-      $pull: { trackedWallets: { address } },
-    },
+    { $pull: { trackedWallets: { address } } },
   );
-  await ctx.db.collection("users").updateOne(
+  await ctx.collection.updateOne(
     { email: ctx.email },
     { $push: { trackedWallets: entry } },
   );
@@ -79,9 +90,10 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "invalid Stacks address" }, { status: 400 });
   }
 
-  await ctx.db
-    .collection("users")
-    .updateOne({ email: ctx.email }, { $pull: { trackedWallets: { address } } });
+  await ctx.collection.updateOne(
+    { email: ctx.email },
+    { $pull: { trackedWallets: { address } } },
+  );
 
   return new NextResponse(null, { status: 204 });
 }
