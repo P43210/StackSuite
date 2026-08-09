@@ -38,19 +38,40 @@ import { SettingsTab } from "./tabs/SettingsTab";
 import { initTrackedWalletsSync } from "@/lib/tracked-wallets";
 import { initBnsWatchlistSync } from "@/lib/bns-watchlist";
 
-const TABS = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "bns", label: "BNS Names", icon: IdCard },
-  { id: "bot", label: "Telegram Bot", icon: Send },
-  { id: "portfolio", label: "Portfolio", icon: WalletIcon },
-  { id: "compare", label: "Compare Wallets", icon: Scale },
-  { id: "stacking", label: "Stacking Monitor", icon: Sprout },
-  { id: "wrapped", label: "Wrapped", icon: Sparkles },
-  { id: "markets", label: "Markets", icon: LineChart },
-  { id: "tools", label: "Tools", icon: Calculator },
-  { id: "tracking", label: "Tracking", icon: Star },
-  { id: "wallet", label: "Wallet", icon: KeyRound },
+// Nav items are grouped for visual hierarchy in the sidebar - purely
+// presentational, the flat TABS list below still drives routing/state
+// so no behavior changes.
+const NAV_GROUPS = [
+  {
+    label: "Overview",
+    tabs: [{ id: "home", label: "Home", icon: Home }] as const,
+  },
+  {
+    label: "Stacks tools",
+    tabs: [
+      { id: "bns", label: "BNS Names", icon: IdCard },
+      { id: "portfolio", label: "Portfolio", icon: WalletIcon },
+      { id: "compare", label: "Compare Wallets", icon: Scale },
+      { id: "stacking", label: "Stacking Monitor", icon: Sprout },
+      { id: "wrapped", label: "Wrapped", icon: Sparkles },
+    ] as const,
+  },
+  {
+    label: "Markets & alerts",
+    tabs: [
+      { id: "bot", label: "Telegram Bot", icon: Send },
+      { id: "markets", label: "Markets", icon: LineChart },
+      { id: "tools", label: "Tools", icon: Calculator },
+      { id: "tracking", label: "Tracking", icon: Star },
+    ] as const,
+  },
+  {
+    label: "Custody",
+    tabs: [{ id: "wallet", label: "Wallet", icon: KeyRound }] as const,
+  },
 ] as const;
+
+const TABS = NAV_GROUPS.flatMap((g) => g.tabs);
 
 const ACCOUNT_TABS = [
   { id: "profile", label: "Profile", icon: User },
@@ -75,18 +96,52 @@ function NavLink({
     <button
       onClick={onClick}
       aria-current={active ? "page" : undefined}
-      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors w-full text-left ${
+      className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200 w-full text-left ${
         active
-          ? "bg-white/[0.06] text-chalk"
-          : "text-slate-mist hover:text-chalk hover:bg-white/[0.03]"
+          ? "glass-surface text-chalk shadow-[0_0_0_1px_rgba(123,112,245,0.25)_inset]"
+          : "text-slate-mist hover:text-chalk hover:bg-white/[0.03] hover:translate-x-0.5"
       }`}
     >
       {active && (
-        <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-ember" />
+        <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-gradient-to-b from-ember to-indigo-light shadow-[0_0_8px_rgba(123,112,245,0.6)]" />
       )}
-      <Icon size={17} strokeWidth={2} className={active ? "text-indigo-light" : ""} />
+      <Icon
+        size={17}
+        strokeWidth={2}
+        className={`transition-colors duration-200 ${active ? "text-indigo-light" : "group-hover:text-indigo-light/70"}`}
+      />
       <span className="font-medium">{tab.label}</span>
     </button>
+  );
+}
+
+function NavGroups({
+  active,
+  onSelect,
+}: {
+  active: TabId;
+  onSelect: (id: TabId) => void;
+}) {
+  return (
+    <nav className="flex flex-col gap-4 flex-1">
+      {NAV_GROUPS.map((group) => (
+        <div key={group.label}>
+          <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-dim">
+            {group.label}
+          </p>
+          <div className="flex flex-col gap-1">
+            {group.tabs.map((tab) => (
+              <NavLink
+                key={tab.id}
+                tab={tab}
+                active={active === tab.id}
+                onClick={() => onSelect(tab.id)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </nav>
   );
 }
 
@@ -104,6 +159,16 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
     initBnsWatchlistSync(signedIn);
   }, [accountEmail]);
 
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileNavOpen]);
+
   const select = (id: TabId) => {
     setActive(id);
     setMobileNavOpen(false);
@@ -114,11 +179,11 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
       <div className="stack-atmosphere" />
 
       {/* Mobile top bar */}
-      <header className="md:hidden relative z-10 flex items-center justify-between px-4 py-3 border-b border-line">
+      <header className="md:hidden sticky top-0 z-20 glass-nav relative flex items-center justify-between px-4 py-3 border-b border-line">
         <button
           onClick={() => setMobileNavOpen(true)}
           aria-label="Open navigation"
-          className="p-2 -ml-2 text-slate-mist hover:text-chalk"
+          className="p-2 -ml-2 text-slate-mist hover:text-chalk transition-colors active:scale-95"
         >
           <Menu size={22} />
         </button>
@@ -138,10 +203,10 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
       {mobileNavOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="absolute inset-0 bg-black/60"
+            className="absolute inset-0 bg-black/60 animate-fade-in"
             onClick={() => setMobileNavOpen(false)}
           />
-          <nav className="relative z-10 w-72 bg-surface border-r border-line p-4 flex flex-col gap-1">
+          <nav className="relative z-10 w-72 glass-nav border-r border-line p-4 flex flex-col gap-1 animate-slide-in-left overflow-y-auto">
             <div className="flex items-center justify-between mb-4 px-1">
               <div className="flex items-center gap-2">
                 <Mark size={20} />
@@ -152,35 +217,30 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
               <button
                 onClick={() => setMobileNavOpen(false)}
                 aria-label="Close navigation"
-                className="p-1 text-slate-mist hover:text-chalk"
+                className="p-1 text-slate-mist hover:text-chalk transition-colors active:scale-95"
               >
                 <X size={20} />
               </button>
             </div>
-            {TABS.map((tab) => (
-              <NavLink
-                key={tab.id}
-                tab={tab}
-                active={active === tab.id}
-                onClick={() => select(tab.id)}
-              />
-            ))}
+            <NavGroups active={active} onSelect={select} />
             <div className="h-px bg-line my-2" />
-            {ACCOUNT_TABS.map((tab) => (
-              <NavLink
-                key={tab.id}
-                tab={tab}
-                active={active === tab.id}
-                onClick={() => select(tab.id)}
-              />
-            ))}
+            <div className="flex flex-col gap-1">
+              {ACCOUNT_TABS.map((tab) => (
+                <NavLink
+                  key={tab.id}
+                  tab={tab}
+                  active={active === tab.id}
+                  onClick={() => select(tab.id)}
+                />
+              ))}
+            </div>
           </nav>
         </div>
       )}
 
       <div className="relative z-10 flex">
         {/* Desktop sidebar */}
-        <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-line px-4 py-6 h-screen sticky top-0">
+        <aside className="hidden md:flex w-64 shrink-0 flex-col border-r border-line px-4 py-6 h-screen sticky top-0 overflow-y-auto">
           <div className="flex items-center gap-2 px-2 mb-8">
             <Mark size={24} />
             <span className="font-display font-bold text-lg">
@@ -188,18 +248,9 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
             </span>
           </div>
 
-          <nav className="flex flex-col gap-1 flex-1">
-            {TABS.map((tab) => (
-              <NavLink
-                key={tab.id}
-                tab={tab}
-                active={active === tab.id}
-                onClick={() => select(tab.id)}
-              />
-            ))}
-          </nav>
+          <NavGroups active={active} onSelect={select} />
 
-          <nav className="flex flex-col gap-1 pt-2 mt-2 border-t border-line">
+          <nav className="flex flex-col gap-1 pt-3 mt-3 border-t border-line">
             {ACCOUNT_TABS.map((tab) => (
               <NavLink
                 key={tab.id}
@@ -210,16 +261,21 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
             ))}
           </nav>
 
-          <div className="px-2 mt-4 flex items-center gap-2">
-            <div className="flex-1">
-              <WalletButton />
+          <div className="mt-4 rounded-xl glass-surface p-2.5">
+            <p className="px-1.5 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-dim">
+              Wallet
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <WalletButton />
+              </div>
+              <ThemeToggle />
             </div>
-            <ThemeToggle />
           </div>
         </aside>
 
         <main className="flex-1 min-w-0 px-5 py-8 md:px-10 md:py-10">
-          <div className="max-w-3xl">
+          <div key={active} className="max-w-3xl animate-fade-in-up">
             {active === "home" && <HomeTab onNavigate={(id) => select(id as TabId)} />}
             {active === "bns" && <BnsTab />}
             {active === "bot" && <TelegramBotTab />}

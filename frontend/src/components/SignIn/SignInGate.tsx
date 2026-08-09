@@ -15,6 +15,9 @@ import {
   Radio,
   Blocks,
   ArrowRight,
+  Wallet2,
+  Compass,
+  BellRing,
 } from "lucide-react";
 import { signInWithGoogle } from "@/lib/auth-actions";
 import { Mark } from "@/components/ui/Mark";
@@ -23,7 +26,7 @@ import { CustomCursor } from "../landing/CustomCursor";
 import { LoadingScreen } from "../landing/LoadingScreen";
 import { FadeIn } from "../landing/FadeIn";
 
-const VALUE_PROPS = [
+const CAPABILITIES = [
   {
     icon: ShieldCheck,
     title: "Non-custodial by default",
@@ -42,7 +45,7 @@ const VALUE_PROPS = [
 ];
 
 const FEATURES = [
-  { icon: IdCard, title: "BNS Names", body: "Resolve names, see what a wallet owns, and watch names before they expire." },
+  { icon: IdCard, title: "BNS Names", body: "Resolve names, look up any wallet address, and watch names before they expire." },
   { icon: Send, title: "Telegram Bot", body: "Get stacking, price, and expiry alerts delivered straight to Telegram." },
   { icon: WalletIcon, title: "Portfolio", body: "Track STX balances, locked stacking positions, and token holdings in one view." },
   { icon: Scale, title: "Compare Wallets", body: "Line up two or more addresses side by side across balances and activity." },
@@ -51,6 +54,27 @@ const FEATURES = [
   { icon: LineChart, title: "Markets", body: "Live prices, top movers, fear & greed, and gas fees across BTC, ETH, and STX." },
   { icon: Calculator, title: "Tools", body: "Stacking yield and reward calculators for planning a cycle ahead of time." },
   { icon: Star, title: "Tracking", body: "Keep a personal watchlist of wallets and get notified when they move." },
+];
+
+const STEPS = [
+  {
+    icon: Wallet2,
+    step: "01",
+    title: "Connect or create a wallet",
+    body: "Bring a wallet you already use, or spin up a StackSuite Wallet in seconds. Your keys stay yours.",
+  },
+  {
+    icon: Compass,
+    step: "02",
+    title: "Explore your on-chain footprint",
+    body: "BNS names, balances, stacking status, and portfolio history resolve live the moment you land.",
+  },
+  {
+    icon: BellRing,
+    step: "03",
+    title: "Set it and get alerted",
+    body: "Watch names, wallets, and price levels, then let Telegram alerts do the watching for you.",
+  },
 ];
 
 export function SignInGate() {
@@ -82,7 +106,7 @@ export function SignInGate() {
         <div className="stack-atmosphere" />
 
         {/* Header */}
-        <header className="sticky top-0 z-30 border-b border-line bg-ink/70 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-line glass-nav">
           <div className="max-w-6xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mark size={22} />
@@ -91,7 +115,7 @@ export function SignInGate() {
               </span>
             </div>
             <nav className="hidden sm:flex items-center gap-7 text-sm text-slate-mist">
-              <button onClick={scrollToFeatures} className="hover:text-chalk transition-colors">
+              <button onClick={scrollToFeatures} className="hover:text-chalk transition-colors duration-200">
                 Features
               </button>
               <a
@@ -100,14 +124,14 @@ export function SignInGate() {
                   e.preventDefault();
                   scrollToSignIn();
                 }}
-                className="hover:text-chalk transition-colors"
+                className="hover:text-chalk transition-colors duration-200"
               >
                 Sign in
               </a>
             </nav>
             <button
               onClick={scrollToSignIn}
-              className="rounded-lg bg-indigo hover:bg-indigo-light transition-colors text-chalk text-sm font-medium px-4 py-2"
+              className="rounded-lg bg-indigo hover:bg-indigo-light transition-all duration-200 active:scale-[0.98] text-chalk text-sm font-medium px-4 py-2 shadow-[0_1px_0_0_rgba(255,255,255,0.08)_inset]"
             >
               Get started
             </button>
@@ -116,10 +140,19 @@ export function SignInGate() {
 
         <main className="relative z-10 max-w-6xl mx-auto px-5 md:px-8">
           {/* Hero */}
-          <section className="pt-20 pb-16 md:pt-28 md:pb-24 flex flex-col items-center text-center">
+          <section className="relative pt-20 pb-16 md:pt-32 md:pb-28 flex flex-col items-center text-center overflow-hidden">
+            <div
+              className="glow-orb w-[36rem] h-[36rem] -top-40 left-1/2 -translate-x-1/2 bg-indigo/30"
+              aria-hidden="true"
+            />
+            <div
+              className="glow-orb w-80 h-80 top-24 right-0 bg-ember/20"
+              aria-hidden="true"
+            />
             <FadeIn>
-              <div className="flex justify-center mb-7" aria-hidden="true">
-                <Mark size={64} />
+              <div className="inline-flex items-center gap-2 rounded-full glass-surface px-3.5 py-1.5 mb-7 text-xs font-mono text-slate-mist">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-light animate-pulse" />
+                Live on Stacks &amp; secured by Bitcoin
               </div>
             </FadeIn>
             <FadeIn delay={80}>
@@ -128,7 +161,7 @@ export function SignInGate() {
                 <br />
                 Full market intel.
                 <br />
-                <span className="text-indigo-light">One app.</span>
+                <span className="text-gradient">One app.</span>
               </h1>
             </FadeIn>
             <FadeIn delay={160}>
@@ -142,28 +175,58 @@ export function SignInGate() {
               <div className="mt-9 flex flex-col sm:flex-row items-center gap-3">
                 <button
                   onClick={scrollToSignIn}
-                  className="group flex items-center gap-2 rounded-lg bg-indigo hover:bg-indigo-light transition-colors text-chalk font-medium px-6 py-3 text-sm"
+                  className="group flex items-center gap-2 rounded-lg bg-indigo hover:bg-indigo-light transition-all duration-200 active:scale-[0.98] text-chalk font-medium px-6 py-3 text-sm shadow-[0_10px_30px_-8px_rgba(85,70,232,0.6)]"
                 >
-                  Get started
-                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+                  Launch StackSuite
+                  <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-0.5" />
                 </button>
                 <button
                   onClick={scrollToFeatures}
-                  className="rounded-lg border border-line-strong hover:border-indigo-light/60 transition-colors text-chalk font-medium px-6 py-3 text-sm"
+                  className="rounded-lg glass-surface hover:border-indigo-light/60 transition-all duration-200 active:scale-[0.98] text-chalk font-medium px-6 py-3 text-sm"
                 >
-                  See what&apos;s inside
+                  Explore Features
                 </button>
+              </div>
+            </FadeIn>
+
+            {/* Floating stat cards */}
+            <FadeIn delay={320} className="w-full">
+              <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+                {[
+                  { label: "Tools in one app", value: "10+" },
+                  { label: "Chains covered", value: "BTC / STX / ETH" },
+                  { label: "Data freshness", value: "Live" },
+                  { label: "Custody model", value: "Non-custodial" },
+                ].map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="glass-surface rounded-xl px-3 py-4 transition-transform duration-200 hover:-translate-y-0.5"
+                  >
+                    <p className="font-display font-bold text-sm sm:text-base text-chalk">{stat.value}</p>
+                    <p className="mt-1 text-[11px] text-slate-mist leading-snug">{stat.label}</p>
+                  </div>
+                ))}
               </div>
             </FadeIn>
           </section>
 
-          {/* Value proposition */}
+          {/* Capabilities */}
           <section className="py-14 md:py-20 border-t border-line">
+            <FadeIn>
+              <div className="max-w-xl mb-10">
+                <p className="text-xs font-mono uppercase tracking-wider text-ember">Capabilities</p>
+                <h2 className="mt-3 font-display font-bold text-2xl md:text-3xl text-chalk">
+                  Why StackSuite over a spreadsheet of tabs
+                </h2>
+              </div>
+            </FadeIn>
             <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
-              {VALUE_PROPS.map((v, i) => (
+              {CAPABILITIES.map((v, i) => (
                 <FadeIn key={v.title} delay={i * 100}>
-                  <div className="h-full rounded-xl border border-line bg-surface/60 p-6">
-                    <v.icon size={20} className="text-indigo-light" />
+                  <div className="h-full rounded-xl glass-surface p-6 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-light/30">
+                    <div className="w-9 h-9 rounded-lg bg-indigo/15 flex items-center justify-center">
+                      <v.icon size={18} className="text-indigo-light" />
+                    </div>
                     <h3 className="mt-4 font-display font-semibold text-chalk">{v.title}</h3>
                     <p className="mt-2 text-sm text-slate-mist leading-relaxed">{v.body}</p>
                   </div>
@@ -187,7 +250,7 @@ export function SignInGate() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
               {FEATURES.map((f, i) => (
                 <FadeIn key={f.title} delay={(i % 3) * 90}>
-                  <div className="h-full rounded-xl border border-line hover:border-line-strong bg-surface/40 p-5 transition-colors">
+                  <div className="h-full rounded-xl glass-surface p-5 transition-all duration-200 hover:-translate-y-1 hover:border-indigo-light/30">
                     <f.icon size={18} className="text-indigo-light" strokeWidth={2} />
                     <h3 className="mt-3 font-medium text-chalk text-sm">{f.title}</h3>
                     <p className="mt-1.5 text-[13px] text-slate-mist leading-relaxed">{f.body}</p>
@@ -197,13 +260,39 @@ export function SignInGate() {
             </div>
           </section>
 
-          {/* Get started / sign in */}
+          {/* How it works */}
+          <section className="py-14 md:py-20 border-t border-line">
+            <FadeIn>
+              <div className="max-w-xl mb-10">
+                <p className="text-xs font-mono uppercase tracking-wider text-ember">How it works</p>
+                <h2 className="mt-3 font-display font-bold text-2xl md:text-3xl text-chalk">
+                  From zero to on-chain visibility in three steps
+                </h2>
+              </div>
+            </FadeIn>
+            <div className="grid sm:grid-cols-3 gap-6 md:gap-8">
+              {STEPS.map((s, i) => (
+                <FadeIn key={s.title} delay={i * 110}>
+                  <div className="relative h-full rounded-xl border border-line bg-surface/50 p-6">
+                    <span className="font-display text-4xl font-bold text-indigo-deep/40">{s.step}</span>
+                    <div className="mt-4 w-9 h-9 rounded-lg bg-indigo/15 flex items-center justify-center">
+                      <s.icon size={18} className="text-indigo-light" />
+                    </div>
+                    <h3 className="mt-4 font-display font-semibold text-chalk">{s.title}</h3>
+                    <p className="mt-2 text-sm text-slate-mist leading-relaxed">{s.body}</p>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </section>
+
+          {/* Get started / sign in (CTA) */}
           <section
             id="get-started"
             className="py-16 md:py-24 border-t border-line flex flex-col items-center scroll-mt-16"
           >
             <FadeIn className="w-full max-w-sm">
-              <div className="rounded-2xl border border-line bg-surface p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
+              <div className="rounded-2xl glass-surface p-7 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)]">
                 <div className="text-center mb-6">
                   <h2 className="font-display text-xl font-bold text-chalk leading-snug">
                     Get started
@@ -218,7 +307,7 @@ export function SignInGate() {
                   <form action={signInWithGoogle}>
                     <button
                       type="submit"
-                      className="w-full flex items-center justify-center gap-3 rounded-lg bg-chalk text-ink font-medium px-5 py-3 text-sm hover:bg-white transition-colors"
+                      className="w-full flex items-center justify-center gap-3 rounded-lg bg-chalk text-ink font-medium px-5 py-3 text-sm hover:bg-white transition-all duration-200 active:scale-[0.98]"
                     >
                       <svg width="18" height="18" viewBox="0 0 48 48">
                         <path

@@ -70,6 +70,19 @@ body {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* Typographic hierarchy: tighter tracking and controlled line-height on
+   display type reads as more premium than default browser metrics. */
+.font-display {
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.02em;
+}
+
 /* Signature texture: a faint stacked-bar watermark, echoing the mark,
    fixed to the viewport so it reads as ambient atmosphere rather than
    decoration on any one screen. */
@@ -87,6 +100,139 @@ body {
   background:
     radial-gradient(60% 50% at 85% 0%, rgba(85, 70, 232, 0.08), transparent 60%),
     radial-gradient(40% 40% at 0% 100%, rgba(242, 153, 74, 0.05), transparent 60%);
+}
+
+/* ---------------------------------------------------------------- */
+/* Glassmorphism surfaces — used sparingly (navbar, feature/stat      */
+/* cards, sidebar active state, modals). Data-heavy areas keep the    */
+/* solid --color-surface background defined on Card for legibility.   */
+/* ---------------------------------------------------------------- */
+.glass-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border-color: rgba(245, 243, 255, 0.1);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+}
+
+:root[data-theme="light"] .glass-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
+  border-color: rgba(23, 20, 42, 0.08);
+}
+
+.glass-nav {
+  background: rgba(15, 13, 23, 0.62);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+:root[data-theme="light"] .glass-nav {
+  background: rgba(247, 246, 251, 0.72);
+}
+
+/* Gradient text for hero headlines / emphasis. */
+.text-gradient {
+  background: linear-gradient(120deg, var(--color-chalk) 20%, var(--color-indigo-light) 60%, var(--color-ember) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Soft ambient glow used behind hero art / premium CTA panels. */
+.glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Thin, unobtrusive scrollbars that match the dark surface. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- */
+/* Micro-interaction keyframes — kept short (150-400ms) and subtle,   */
+/* disabled globally under prefers-reduced-motion below.              */
+/* ---------------------------------------------------------------- */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-fade-in {
+  animation: fade-in 300ms ease-out both;
+}
+.animate-scale-in {
+  animation: scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-slide-in-left {
+  animation: slide-in-left 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 ::selection {

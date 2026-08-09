@@ -13,9 +13,9 @@ export function SubTabBar<T extends string>({
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
-          className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+          className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${
             active === tab.id
-              ? "bg-indigo text-chalk"
+              ? "bg-indigo text-chalk shadow-[0_4px_14px_-4px_rgba(85,70,232,0.6)]"
               : "text-slate-mist hover:text-chalk hover:bg-white/[0.04]"
           }`}
         >

@@ -22,7 +22,7 @@ import { TipJar } from "@/components/TipJar";
 
 const SUB_TABS = [
   { id: "resolve", label: "Resolve" },
-  { id: "mine", label: "My Names" },
+  { id: "mine", label: "By Address" },
   { id: "watchlist", label: "Watchlist" },
 ] as const;
 
@@ -138,27 +138,120 @@ function ResolvePanel() {
   );
 }
 
+/** Loose sanity check for a Stacks address (mainnet SP.../testnet ST...),
+ * just enough to avoid firing a lookup on obvious garbage input. The API
+ * call itself is the real source of truth. */
+function looksLikeStacksAddress(value: string) {
+  return /^S[PT][0-9A-Z]{20,40}$/i.test(value.trim());
+}
+
 function MyNamesPanel() {
   const { connected, address, connectWallet } = useWallet();
 
+  // The address currently being looked up - defaults to the connected
+  // wallet once one is available, but can be overridden by typing any
+  // other address in, so names can be looked up for wallets you don't
+  // control too.
+  const [lookupAddress, setLookupAddress] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [addressInput, setAddressInput] = useState("");
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!lookupAddress && connected && address) {
+      setLookupAddress(address);
+    }
+  }, [connected, address, lookupAddress]);
+
   const namesQuery = useQuery({
-    queryKey: ["bns-owned", address],
-    queryFn: () => fetchOwnedBnsNames(address as string),
-    enabled: connected && !!address,
+    queryKey: ["bns-owned", lookupAddress],
+    queryFn: () => fetchOwnedBnsNames(lookupAddress as string),
+    enabled: !!lookupAddress,
   });
 
-  if (!connected) {
+  const submitAddress = () => {
+    const trimmed = addressInput.trim();
+    if (!looksLikeStacksAddress(trimmed)) {
+      setAddressError("That doesn't look like a valid Stacks address");
+      return;
+    }
+    setAddressError(null);
+    setLookupAddress(trimmed);
+    setSearching(false);
+    setAddressInput("");
+  };
+
+  if (!lookupAddress) {
     return (
-      <EmptyState
-        title="No wallet connected"
-        description="Connect a wallet to see which BNS names it owns."
-        action={<Button onClick={connectWallet}>Connect wallet</Button>}
-      />
+      <div className="space-y-4">
+        {!connected && (
+          <EmptyState
+            title="No wallet connected"
+            description="Connect a wallet to see which BNS names it owns, or search any address below."
+            action={<Button onClick={connectWallet}>Connect wallet</Button>}
+          />
+        )}
+        <Card className="p-6 space-y-3">
+          <div className="flex gap-2 items-end">
+            <div className="flex-1">
+              <Field
+                label="Wallet address"
+                value={addressInput}
+                onChange={(e) => setAddressInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submitAddress()}
+                placeholder="SP3DYSKV87G6X8VXQ1E2C2TBED5NBK89K1NYAF3PS"
+              />
+            </div>
+            <Button onClick={submitAddress} disabled={!addressInput.trim()}>
+              <Search size={15} />
+              Look up
+            </Button>
+          </div>
+          {addressError && <p className="text-xs font-mono text-ember">{addressError}</p>}
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+        <p className="text-xs font-mono text-slate-mist uppercase tracking-wide">
+          Showing{" "}
+          <span className="text-chalk normal-case">{truncate(lookupAddress)}</span>
+          {lookupAddress === address && <span className="text-indigo-light"> (connected)</span>}
+        </p>
+        {searching ? (
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <input
+              autoFocus
+              value={addressInput}
+              onChange={(e) => setAddressInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submitAddress();
+                if (e.key === "Escape") setSearching(false);
+              }}
+              placeholder="Paste a Stacks address"
+              className="flex-1 sm:w-72 rounded-lg bg-black/20 border border-line px-3 py-1.5 font-mono text-xs text-chalk placeholder:text-slate-dim focus:outline-none focus:border-indigo-light transition-colors"
+            />
+            <Button variant="secondary" onClick={submitAddress} className="!px-3 !py-1.5 text-xs">
+              Go
+            </Button>
+          </div>
+        ) : (
+          <button
+            onClick={() => {
+              setSearching(true);
+              setAddressError(null);
+            }}
+            className="text-xs font-mono text-indigo-light hover:text-chalk transition-colors"
+          >
+            Search a different address
+          </button>
+        )}
+      </div>
+      {addressError && <p className="text-xs font-mono text-ember px-1">{addressError}</p>}
+
       {namesQuery.isLoading && <Spinner label="Looking up names" />}
       {namesQuery.isError && (
         <Card accent className="p-6">
@@ -170,11 +263,11 @@ function MyNamesPanel() {
       {namesQuery.data && namesQuery.data.names.length === 0 && (
         <EmptyState
           title="No BNS names owned"
-          description={`${truncate(address as string)} doesn't own any registered BNS names.`}
+          description={`${truncate(lookupAddress)} doesn't own any registered BNS names.`}
         />
       )}
       {namesQuery.data && namesQuery.data.names.length > 0 && (
-        <Card className="divide-y divide-line overflow-hidden">
+        <Card glass className="divide-y divide-line overflow-hidden">
           {namesQuery.data.names.map((name) => (
             <div key={name} className="flex items-center justify-between gap-3 px-4 py-3.5">
               <div className="flex items-center gap-2 min-w-0">

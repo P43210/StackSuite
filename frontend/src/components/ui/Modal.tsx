@@ -23,14 +23,14 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-10 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-line-strong bg-surface-raised shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6)] max-h-[85vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 sticky top-0 bg-surface-raised">
+      <div className="absolute inset-0 bg-black/60 animate-fade-in" onClick={onClose} />
+      <div className="relative z-10 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-line-strong glass-surface shadow-[0_24px_60px_-12px_rgba(0,0,0,0.6)] max-h-[85vh] overflow-y-auto animate-scale-in">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 sticky top-0 glass-surface border-b-0">
           <h2 className="font-display font-semibold text-chalk">{title}</h2>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 -m-1 text-slate-mist hover:text-chalk transition-colors"
+            className="p-1 -m-1 text-slate-mist hover:text-chalk transition-colors duration-200 active:scale-95"
           >
             <X size={18} />
           </button>
