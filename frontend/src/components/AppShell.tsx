@@ -38,40 +38,35 @@ import { SettingsTab } from "./tabs/SettingsTab";
 import { initTrackedWalletsSync } from "@/lib/tracked-wallets";
 import { initBnsWatchlistSync } from "@/lib/bns-watchlist";
 
-// Nav items are grouped for visual hierarchy in the sidebar - purely
-// presentational, the flat TABS list below still drives routing/state
-// so no behavior changes.
-const NAV_GROUPS = [
-  {
-    label: "Overview",
-    tabs: [{ id: "home", label: "Home", icon: Home }] as const,
-  },
-  {
-    label: "Stacks tools",
-    tabs: [
-      { id: "bns", label: "BNS Names", icon: IdCard },
-      { id: "portfolio", label: "Portfolio", icon: WalletIcon },
-      { id: "compare", label: "Compare Wallets", icon: Scale },
-      { id: "stacking", label: "Stacking Monitor", icon: Sprout },
-      { id: "wrapped", label: "Wrapped", icon: Sparkles },
-    ] as const,
-  },
-  {
-    label: "Markets & alerts",
-    tabs: [
-      { id: "bot", label: "Telegram Bot", icon: Send },
-      { id: "markets", label: "Markets", icon: LineChart },
-      { id: "tools", label: "Tools", icon: Calculator },
-      { id: "tracking", label: "Tracking", icon: Star },
-    ] as const,
-  },
-  {
-    label: "Custody",
-    tabs: [{ id: "wallet", label: "Wallet", icon: KeyRound }] as const,
-  },
+// Flat list drives routing/state exactly as before the redesign - the
+// groups below are purely a presentational grouping over this same
+// list (by id), so there's a single source of truth for each tab's
+// id/label/icon and no risk of the two drifting apart.
+const TABS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "bns", label: "BNS Names", icon: IdCard },
+  { id: "portfolio", label: "Portfolio", icon: WalletIcon },
+  { id: "compare", label: "Compare Wallets", icon: Scale },
+  { id: "stacking", label: "Stacking Monitor", icon: Sprout },
+  { id: "wrapped", label: "Wrapped", icon: Sparkles },
+  { id: "bot", label: "Telegram Bot", icon: Send },
+  { id: "markets", label: "Markets", icon: LineChart },
+  { id: "tools", label: "Tools", icon: Calculator },
+  { id: "tracking", label: "Tracking", icon: Star },
+  { id: "wallet", label: "Wallet", icon: KeyRound },
 ] as const;
 
-const TABS = NAV_GROUPS.flatMap((g) => g.tabs);
+// Grouping metadata for the sidebar - just labels + which ids belong
+// under each heading. Rendered by looking each id up in TABS below,
+// so this never needs its own id/label/icon literals (and can't type-
+// error the way computing this by flatMap-ing separately-shaped
+// tuples did).
+const NAV_GROUPS = [
+  { label: "Overview", ids: ["home"] },
+  { label: "Stacks tools", ids: ["bns", "portfolio", "compare", "stacking", "wrapped"] },
+  { label: "Markets & alerts", ids: ["bot", "markets", "tools", "tracking"] },
+  { label: "Custody", ids: ["wallet"] },
+] as const;
 
 const ACCOUNT_TABS = [
   { id: "profile", label: "Profile", icon: User },
@@ -124,23 +119,31 @@ function NavGroups({
 }) {
   return (
     <nav className="flex flex-col gap-4 flex-1">
-      {NAV_GROUPS.map((group) => (
-        <div key={group.label}>
-          <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-dim">
-            {group.label}
-          </p>
-          <div className="flex flex-col gap-1">
-            {group.tabs.map((tab) => (
-              <NavLink
-                key={tab.id}
-                tab={tab}
-                active={active === tab.id}
-                onClick={() => onSelect(tab.id)}
-              />
-            ))}
+      {NAV_GROUPS.map((group) => {
+        // Look each id up in TABS rather than embedding tab objects
+        // directly in NAV_GROUPS - keeps a single source of truth for
+        // id/label/icon and avoids combining differently-shaped const
+        // tuples (which is what produced the earlier type error).
+        const ids: readonly string[] = group.ids;
+        const tabs = TABS.filter((tab) => ids.includes(tab.id));
+        return (
+          <div key={group.label}>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-dim">
+              {group.label}
+            </p>
+            <div className="flex flex-col gap-1">
+              {tabs.map((tab) => (
+                <NavLink
+                  key={tab.id}
+                  tab={tab}
+                  active={active === tab.id}
+                  onClick={() => onSelect(tab.id)}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </nav>
   );
 }
