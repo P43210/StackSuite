@@ -214,43 +214,56 @@ function MyNamesPanel() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+    <div className="space-y-5">
+      {/* Header bar - mirrors a "showing <name> (<address>)" strip with a
+          real search-different-address action, rather than a plain
+          inline text row. */}
+      <div className="rounded-xl border border-line bg-surface/60 px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs font-mono text-slate-mist uppercase tracking-wide">
           Showing{" "}
-          <span className="text-chalk normal-case">{truncate(lookupAddress)}</span>
-          {lookupAddress === address && <span className="text-indigo-light"> (connected)</span>}
+          {namesQuery.data && namesQuery.data.names.length > 0 ? (
+            <span className="text-chalk normal-case font-semibold">
+              {namesQuery.data.names[0]}
+            </span>
+          ) : (
+            <span className="text-chalk normal-case">{truncate(lookupAddress)}</span>
+          )}{" "}
+          <span className="text-slate-dim normal-case">({lookupAddress})</span>
+          {lookupAddress === address && <span className="text-indigo-light"> · connected</span>}
         </p>
-        {searching ? (
-          <div className="flex gap-2 items-center w-full sm:w-auto">
-            <input
-              autoFocus
-              value={addressInput}
-              onChange={(e) => setAddressInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") submitAddress();
-                if (e.key === "Escape") setSearching(false);
-              }}
-              placeholder="Paste a Stacks address"
-              className="flex-1 sm:w-72 rounded-lg bg-black/20 border border-line px-3 py-1.5 font-mono text-xs text-chalk placeholder:text-slate-dim focus:outline-none focus:border-indigo-light transition-colors"
-            />
-            <Button variant="secondary" onClick={submitAddress} className="!px-3 !py-1.5 text-xs">
-              Go
-            </Button>
-          </div>
-        ) : (
-          <button
+        {!searching && (
+          <Button
+            variant="secondary"
             onClick={() => {
               setSearching(true);
               setAddressError(null);
             }}
-            className="text-xs font-mono text-indigo-light hover:text-chalk transition-colors"
+            className="!px-3.5 !py-1.5 text-xs shrink-0"
           >
             Search a different address
-          </button>
+          </Button>
         )}
       </div>
-      {addressError && <p className="text-xs font-mono text-ember px-1">{addressError}</p>}
+
+      {searching && (
+        <div className="flex gap-2 items-center">
+          <input
+            autoFocus
+            value={addressInput}
+            onChange={(e) => setAddressInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submitAddress();
+              if (e.key === "Escape") setSearching(false);
+            }}
+            placeholder="Paste a Stacks address"
+            className="flex-1 rounded-lg bg-black/20 border border-line px-3 py-2 font-mono text-xs text-chalk placeholder:text-slate-dim focus:outline-none focus:border-indigo-light transition-colors"
+          />
+          <Button onClick={submitAddress} className="!px-4 !py-2 text-xs shrink-0">
+            Go
+          </Button>
+        </div>
+      )}
+      {addressError && <p className="text-xs font-mono text-ember">{addressError}</p>}
 
       {namesQuery.isLoading && <Spinner label="Looking up names" />}
       {namesQuery.isError && (
@@ -267,17 +280,20 @@ function MyNamesPanel() {
         />
       )}
       {namesQuery.data && namesQuery.data.names.length > 0 && (
-        <Card glass className="divide-y divide-line overflow-hidden">
-          {namesQuery.data.names.map((name) => (
-            <div key={name} className="flex items-center justify-between gap-3 px-4 py-3.5">
-              <div className="flex items-center gap-2 min-w-0">
-                <IdCard size={15} className="text-indigo-light shrink-0" />
+        <div>
+          <div className="flex items-center gap-2 px-1 mb-2.5 text-sm font-medium text-chalk">
+            <IdCard size={15} className="text-indigo-light" />
+            BNS names
+          </div>
+          <Card glass className="divide-y divide-line overflow-hidden">
+            {namesQuery.data.names.map((name) => (
+              <div key={name} className="flex items-center justify-between gap-3 px-4 py-3.5">
                 <span className="text-sm text-chalk font-mono truncate">{name}</span>
+                <Badge tone="success">active</Badge>
               </div>
-              <Badge tone="positive">active</Badge>
-            </div>
-          ))}
-        </Card>
+            ))}
+          </Card>
+        </div>
       )}
     </div>
   );

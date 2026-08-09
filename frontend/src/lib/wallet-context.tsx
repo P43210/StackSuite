@@ -257,8 +257,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           ? null
           : noProvider
           ? walletConnectConfigured
-            ? "Couldn't open the wallet connection request. This can happen if NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID wasn't included in the build that's currently running (Next.js only inlines it at build time) - rebuild and redeploy after setting it, then try again."
-            : "No wallet extension was detected. Install or unlock Leather/Xverse, then try again."
+            ? "Couldn't open the wallet connection request. NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is present in this build, so the failure is elsewhere - most likely an invalid project ID, or this domain isn't in the allowed origins list for that project on cloud.walletconnect.com. Double-check both, then try again."
+            : "No wallet extension was detected, and no WalletConnect project ID is configured for a QR/deep-link fallback. Install or unlock Leather/Xverse in this browser, or set NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID and redeploy to enable mobile wallet connections."
           : message || "Couldn't connect to a wallet. Please try again."
       );
     } finally {

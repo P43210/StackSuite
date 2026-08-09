@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { Sprout, Lock, LockOpen, Plus } from "lucide-react";
+import { Sprout, Lock, LockOpen, Plus, X } from "lucide-react";
 import { useWallet } from "@/lib/wallet-context";
 import { fetchPoxInfo, fetchStackingStatus, microStxToStx, ApiError } from "@/lib/api";
-import { listTrackedWallets, trackWallet, TrackedWallet } from "@/lib/tracked-wallets";
+import { listTrackedWallets, trackWallet, untrackWallet, TrackedWallet } from "@/lib/tracked-wallets";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
@@ -59,6 +59,10 @@ export function StackingMonitorTab() {
     const next = trackWallet(address, "Watched address", "watched");
     setTracked(next);
     setManualInput("");
+  };
+
+  const removeWatchAddress = (address: string) => {
+    setTracked(untrackWallet(address));
   };
 
   return (
@@ -137,7 +141,8 @@ export function StackingMonitorTab() {
         <div className="space-y-3">
           {watchedAddresses.map((address, i) => {
             const result = statusQueries[i];
-            const label = tracked.find((w) => w.address === address)?.label ??
+            const trackedEntry = tracked.find((w) => w.address === address);
+            const label = trackedEntry?.label ??
               (address === connectedAddress ? "Connected wallet" : address);
             return (
               <Card key={address} className="p-4">
@@ -146,20 +151,32 @@ export function StackingMonitorTab() {
                     <div className="text-sm text-chalk font-medium">{label}</div>
                     <div className="font-mono text-xs text-slate-mist">{truncate(address)}</div>
                   </div>
-                  {result?.isLoading && <Spinner />}
-                  {result?.data && (
-                    <Badge tone={result.data.isStacking ? "positive" : "neutral"}>
-                      {result.data.isStacking ? (
-                        <span className="flex items-center gap-1">
-                          <Lock size={11} /> Stacking
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1">
-                          <LockOpen size={11} /> Not stacking
-                        </span>
-                      )}
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {result?.isLoading && <Spinner />}
+                    {result?.data && (
+                      <Badge tone={result.data.isStacking ? "positive" : "neutral"}>
+                        {result.data.isStacking ? (
+                          <span className="flex items-center gap-1">
+                            <Lock size={11} /> Stacking
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1">
+                            <LockOpen size={11} /> Not stacking
+                          </span>
+                        )}
+                      </Badge>
+                    )}
+                    {trackedEntry && (
+                      <button
+                        onClick={() => removeWatchAddress(address)}
+                        aria-label={`Stop tracking ${label}`}
+                        title="Stop tracking this wallet"
+                        className="p-1.5 -m-1 rounded-md text-slate-dim hover:text-ember hover:bg-ember/10 transition-all duration-200 active:scale-90"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {result?.isError && (
                   <p className="text-xs font-mono text-ember">

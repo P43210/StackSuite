@@ -18,6 +18,13 @@ import {
   Wallet2,
   Compass,
   BellRing,
+  BarChart3,
+  Target,
+  Eye,
+  Zap,
+  Layers,
+  Ban,
+  ChevronDown,
 } from "lucide-react";
 import { signInWithGoogle } from "@/lib/auth-actions";
 import { Mark } from "@/components/ui/Mark";
@@ -45,6 +52,7 @@ const CAPABILITIES = [
 ];
 
 const FEATURES = [
+  { icon: BarChart3, title: "Wallet Analytics", body: "Balances, holdings, stacking, and transaction history for any address at a glance." },
   { icon: IdCard, title: "BNS Names", body: "Resolve names, look up any wallet address, and watch names before they expire." },
   { icon: Send, title: "Telegram Bot", body: "Get stacking, price, and expiry alerts delivered straight to Telegram." },
   { icon: WalletIcon, title: "Portfolio", body: "Track STX balances, locked stacking positions, and token holdings in one view." },
@@ -77,10 +85,61 @@ const STEPS = [
   },
 ];
 
+const BENEFITS = [
+  {
+    icon: Layers,
+    title: "One dashboard, not ten tabs",
+    body: "BNS, stacking, portfolio, markets, and alerts used to mean five different sites and browser extensions. Here they're one app.",
+  },
+  {
+    icon: Zap,
+    title: "Answers in seconds, not minutes",
+    body: "No more piecing together a wallet's status from a block explorer, a pool dashboard, and a price ticker by hand.",
+  },
+  {
+    icon: Ban,
+    title: "Nothing to trust with your funds",
+    body: "Every read comes straight from the chain and public feeds. StackSuite never holds a balance on your behalf.",
+  },
+  {
+    icon: BellRing,
+    title: "Told, not asked to check back",
+    body: "Set a watch once and let Telegram alerts flag stacking changes, expiring names, and price moves for you.",
+  },
+];
+
+const FAQS = [
+  {
+    q: "Is StackSuite custodial?",
+    a: "No. Connecting an existing wallet or opening a StackSuite Wallet both keep your keys on your device - StackSuite only ever reads public chain data, it never holds or moves funds on your behalf.",
+  },
+  {
+    q: "Do I need to create a new wallet to use this?",
+    a: "No. You can connect a wallet you already use (Leather, Xverse, or any WalletConnect-compatible wallet) and get full read access immediately. Opening a StackSuite Wallet is optional, for anyone who wants one in-app.",
+  },
+  {
+    q: "Is StackSuite free to use?",
+    a: "Yes, the dashboard, BNS tools, stacking monitor, portfolio view, and market data are free. Some future account features may be added down the line, but nothing here requires payment today.",
+  },
+  {
+    q: "Which networks does StackSuite support?",
+    a: "Stacks (mainnet and testnet) for wallet, BNS, and stacking data, with Bitcoin and Ethereum market data alongside it for context.",
+  },
+  {
+    q: "How current is the data I'm looking at?",
+    a: "Live. Prices, gas, stacking status, and balances are fetched from Hiro, mempool.space, and exchange feeds each time you load a page rather than served from a stale cache.",
+  },
+  {
+    q: "Can I look up a wallet that isn't mine?",
+    a: "Yes. BNS names, stacking status, and wallet analytics can all be searched by address, not just for a connected wallet - useful for checking a wallet before sending funds or names, or reading up on any public address.",
+  },
+];
+
 export function SignInGate() {
   const [showLoading, setShowLoading] = useState(true);
   const [formPending, setFormPending] = useState(false);
   const [cursorEnabled, setCursorEnabled] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
     const fine = window.matchMedia("(pointer: fine)").matches;
@@ -283,6 +342,110 @@ export function SignInGate() {
                   </div>
                 </FadeIn>
               ))}
+            </div>
+          </section>
+
+          {/* Mission & vision */}
+          <section className="py-14 md:py-20 border-t border-line">
+            <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+              <FadeIn>
+                <div className="h-full rounded-xl glass-surface p-7 md:p-8">
+                  <div className="w-9 h-9 rounded-lg bg-indigo/15 flex items-center justify-center">
+                    <Target size={18} className="text-indigo-light" />
+                  </div>
+                  <h2 className="mt-4 font-display font-bold text-xl md:text-2xl text-chalk">
+                    Our mission
+                  </h2>
+                  <p className="mt-3 text-sm md:text-base text-slate-mist leading-relaxed">
+                    Make Stacks and Bitcoin-secured tooling as easy to reach for as checking
+                    your email - one place to see a wallet's names, balances, and stacking
+                    status, without giving up custody or piecing it together across five
+                    different sites.
+                  </p>
+                </div>
+              </FadeIn>
+              <FadeIn delay={100}>
+                <div className="h-full rounded-xl glass-surface p-7 md:p-8">
+                  <div className="w-9 h-9 rounded-lg bg-ember/15 flex items-center justify-center">
+                    <Eye size={18} className="text-ember" />
+                  </div>
+                  <h2 className="mt-4 font-display font-bold text-xl md:text-2xl text-chalk">
+                    Our vision
+                  </h2>
+                  <p className="mt-3 text-sm md:text-base text-slate-mist leading-relaxed">
+                    A future where checking on-chain activity is as ordinary and
+                    friction-free as checking a bank app, where non-custodial by
+                    default is simply the standard, and where Bitcoin's security
+                    underwrites everyday tools rather than sitting apart from them.
+                  </p>
+                </div>
+              </FadeIn>
+            </div>
+          </section>
+
+          {/* Benefits */}
+          <section className="py-14 md:py-20 border-t border-line">
+            <FadeIn>
+              <div className="max-w-xl mb-10">
+                <p className="text-xs font-mono uppercase tracking-wider text-ember">Why StackSuite</p>
+                <h2 className="mt-3 font-display font-bold text-2xl md:text-3xl text-chalk">
+                  What that actually gets you
+                </h2>
+              </div>
+            </FadeIn>
+            <div className="grid sm:grid-cols-2 gap-4 md:gap-5">
+              {BENEFITS.map((b, i) => (
+                <FadeIn key={b.title} delay={(i % 2) * 100}>
+                  <div className="h-full flex gap-4 rounded-xl border border-line bg-surface/50 p-5">
+                    <div className="w-9 h-9 shrink-0 rounded-lg bg-indigo/15 flex items-center justify-center">
+                      <b.icon size={17} className="text-indigo-light" />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-semibold text-chalk text-sm">{b.title}</h3>
+                      <p className="mt-1.5 text-[13px] text-slate-mist leading-relaxed">{b.body}</p>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </section>
+
+          {/* FAQ */}
+          <section className="py-14 md:py-20 border-t border-line">
+            <FadeIn>
+              <div className="max-w-xl mb-10">
+                <p className="text-xs font-mono uppercase tracking-wider text-ember">FAQ</p>
+                <h2 className="mt-3 font-display font-bold text-2xl md:text-3xl text-chalk">
+                  Common questions
+                </h2>
+              </div>
+            </FadeIn>
+            <div className="max-w-2xl divide-y divide-line rounded-xl border border-line overflow-hidden">
+              {FAQS.map((item, i) => {
+                const isOpen = openFaq === i;
+                return (
+                  <div key={item.q} className="bg-surface/40">
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                      className="w-full flex items-center justify-between gap-4 px-5 py-4 text-left transition-colors duration-200 hover:bg-white/[0.02]"
+                    >
+                      <span className="font-medium text-sm md:text-base text-chalk">{item.q}</span>
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-slate-mist transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    <div
+                      className={`grid transition-all duration-300 ease-out ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="px-5 pb-4 text-sm text-slate-mist leading-relaxed">{item.a}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </section>
 

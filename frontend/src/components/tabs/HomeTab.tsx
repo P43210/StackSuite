@@ -14,6 +14,7 @@ import {
   Radio,
   Blocks,
   ArrowRight,
+  BarChart3,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Mark } from "@/components/ui/Mark";
@@ -37,6 +38,12 @@ const VALUE_PROPS = [
 ];
 
 const FEATURES = [
+  {
+    id: "analytics",
+    icon: BarChart3,
+    title: "Wallet Analytics",
+    body: "Balances, holdings, stacking, and transaction history for any address at a glance.",
+  },
   {
     id: "bns",
     icon: IdCard,

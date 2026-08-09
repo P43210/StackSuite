@@ -17,12 +17,14 @@ import {
   Settings as SettingsIcon,
   Menu,
   X,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import { Mark } from "./ui/Mark";
 import { WalletButton } from "./WalletButton";
 import { ThemeToggle } from "./ThemeToggle";
 import { HomeTab } from "./tabs/HomeTab";
+import { WalletAnalyticsTab } from "./tabs/WalletAnalyticsTab";
 import { BnsTab } from "./tabs/BnsTab";
 import { TelegramBotTab } from "./tabs/TelegramBotTab";
 import { PortfolioTab } from "./tabs/PortfolioTab";
@@ -44,6 +46,7 @@ import { initBnsWatchlistSync } from "@/lib/bns-watchlist";
 // id/label/icon and no risk of the two drifting apart.
 const TABS = [
   { id: "home", label: "Home", icon: Home },
+  { id: "analytics", label: "Wallet Analytics", icon: BarChart3 },
   { id: "bns", label: "BNS Names", icon: IdCard },
   { id: "portfolio", label: "Portfolio", icon: WalletIcon },
   { id: "compare", label: "Compare Wallets", icon: Scale },
@@ -63,7 +66,10 @@ const TABS = [
 // tuples did).
 const NAV_GROUPS = [
   { label: "Overview", ids: ["home"] },
-  { label: "Stacks tools", ids: ["bns", "portfolio", "compare", "stacking", "wrapped"] },
+  {
+    label: "Stacks tools",
+    ids: ["analytics", "bns", "portfolio", "compare", "stacking", "wrapped"],
+  },
   { label: "Markets & alerts", ids: ["bot", "markets", "tools", "tracking"] },
   { label: "Custody", ids: ["wallet"] },
 ] as const;
@@ -280,6 +286,7 @@ export function AppShell({ accountEmail }: { accountEmail: string | null }) {
         <main className="flex-1 min-w-0 px-5 py-8 md:px-10 md:py-10">
           <div key={active} className="max-w-3xl animate-fade-in-up">
             {active === "home" && <HomeTab onNavigate={(id) => select(id as TabId)} />}
+            {active === "analytics" && <WalletAnalyticsTab />}
             {active === "bns" && <BnsTab />}
             {active === "bot" && <TelegramBotTab />}
             {active === "portfolio" && <PortfolioTab />}
