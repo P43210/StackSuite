@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Document } from "mongodb";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
@@ -13,12 +12,13 @@ type TrackedWallet = {
   addedAt: string;
 };
 
-// Gives the driver enough shape info to type $push/$pull against
-// trackedWallets as an array of TrackedWallet - without this, an
-// untyped Collection<Document> fails type-checking on these update
-// operators at build time (see the matching note in the
-// bns-watchlist route for the same issue with a plain string array).
-interface UserDoc extends Document {
+// Deliberately does NOT extend mongodb's `Document` type - see the
+// matching note in the bns-watchlist route. Extending it pulls in a
+// `[key: string]: any` index signature that makes the driver's $pull/
+// $push operator types fall back to their generic branch and fail to
+// type-check against `trackedWallets`. A plain interface keeps them
+// precise and still satisfies Collection<TSchema>.
+interface UserDoc {
   email: string;
   trackedWallets?: TrackedWallet[];
 }

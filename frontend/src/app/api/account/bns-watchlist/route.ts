@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Document } from "mongodb";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
-// Gives the driver enough shape info to type $addToSet/$pull against
-// bnsWatchlist as a string array - without this, an untyped
-// Collection<Document> can't tell a plain string apart from a Mongo
-// query/filter object and the build fails type-checking.
-interface UserDoc extends Document {
+// Deliberately does NOT extend mongodb's `Document` type. `Document`
+// carries a `[key: string]: any` index signature, and when a schema
+// interface extends it, the driver's mapped operator types ($pull,
+// $addToSet, etc.) fall back to their generic "any key" branch instead
+// of the specific `bnsWatchlist: string[]` branch - which is what
+// produces the "Property 'bnsWatchlist' is incompatible with index
+// signature" build error. A plain interface (no `extends`) keeps the
+// operator types precise, and still satisfies Collection<TSchema>.
+interface UserDoc {
   email: string;
   bnsWatchlist?: string[];
 }
