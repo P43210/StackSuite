@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { UpdateFilter } from "mongodb";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
@@ -21,6 +22,16 @@ type TrackedWallet = {
 interface UserDoc {
   email: string;
   trackedWallets?: TrackedWallet[];
+}
+
+// Belt-and-suspenders on top of the fix above - see the matching note
+// in the bns-watchlist route for why these are built as explicitly-
+// typed `UpdateFilter<UserDoc>` values instead of inline literals.
+function pullByAddress(address: string): UpdateFilter<UserDoc> {
+  return { $pull: { trackedWallets: { address } } } as unknown as UpdateFilter<UserDoc>;
+}
+function pushWallet(entry: TrackedWallet): UpdateFilter<UserDoc> {
+  return { $push: { trackedWallets: entry } } as unknown as UpdateFilter<UserDoc>;
 }
 
 async function requireDb() {
@@ -69,14 +80,8 @@ export async function POST(req: NextRequest) {
   // one - the Mongo equivalent of the local dedupe-and-replace
   // behavior. Two round trips (not one atomic op) because $pull and
   // $push can't target the same array field in a single update.
-  await ctx.collection.updateOne(
-    { email: ctx.email },
-    { $pull: { trackedWallets: { address } } },
-  );
-  await ctx.collection.updateOne(
-    { email: ctx.email },
-    { $push: { trackedWallets: entry } },
-  );
+  await ctx.collection.updateOne({ email: ctx.email }, pullByAddress(address));
+  await ctx.collection.updateOne({ email: ctx.email }, pushWallet(entry));
 
   return NextResponse.json({ wallet: entry }, { status: 201 });
 }
@@ -90,10 +95,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "invalid Stacks address" }, { status: 400 });
   }
 
-  await ctx.collection.updateOne(
-    { email: ctx.email },
-    { $pull: { trackedWallets: { address } } },
-  );
+  await ctx.collection.updateOne({ email: ctx.email }, pullByAddress(address));
 
   return new NextResponse(null, { status: 204 });
 }

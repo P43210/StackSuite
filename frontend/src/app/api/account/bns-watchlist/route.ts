@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { UpdateFilter } from "mongodb";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 
@@ -13,6 +14,21 @@ import { getDb } from "@/lib/mongodb";
 interface UserDoc {
   email: string;
   bnsWatchlist?: string[];
+}
+
+// Belt-and-suspenders on top of the fix above: build the update
+// document as an explicitly-typed `UpdateFilter<UserDoc>` (bridged
+// through `unknown`) rather than an inline object literal. Some
+// versions of the driver's mapped operator types still misresolve
+// $pull/$addToSet against an optional array field depending on how
+// the object literal is contextually typed at the call site - typing
+// it here, once, guarantees the shape is correct without depending on
+// that inference succeeding at every call site.
+function pullName(name: string): UpdateFilter<UserDoc> {
+  return { $pull: { bnsWatchlist: name } } as unknown as UpdateFilter<UserDoc>;
+}
+function addName(name: string): UpdateFilter<UserDoc> {
+  return { $addToSet: { bnsWatchlist: name } } as unknown as UpdateFilter<UserDoc>;
 }
 
 async function requireDb() {
@@ -46,10 +62,7 @@ export async function POST(req: NextRequest) {
   }
   const normalized = name.trim().toLowerCase();
 
-  await ctx.collection.updateOne(
-    { email: ctx.email },
-    { $addToSet: { bnsWatchlist: normalized } },
-  );
+  await ctx.collection.updateOne({ email: ctx.email }, addName(normalized));
 
   return NextResponse.json({ name: normalized }, { status: 201 });
 }
@@ -65,7 +78,7 @@ export async function DELETE(req: NextRequest) {
 
   await ctx.collection.updateOne(
     { email: ctx.email },
-    { $pull: { bnsWatchlist: name.trim().toLowerCase() } },
+    pullName(name.trim().toLowerCase()),
   );
 
   return new NextResponse(null, { status: 204 });
